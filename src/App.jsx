@@ -15,9 +15,16 @@ import Final from './components/Final';
    SOUND CONTEXT (Part 10)
    ═══════════════════════════════════════════ */
 const SoundContext = createContext({
+  isMuted: true,
   playChime: () => { },
   playRustle: () => { },
-  playWhoosh: () => { },
+  playCakeCandles: () => { },
+  playEnvelopeHold: () => { return null; },
+  playWaxCrack: () => { },
+  playEnvelopeSlide: () => { },
+  playWordDissolve: () => { },
+  playPolaroidSettle: () => { },
+  playBirthdayChime: () => { },
 });
 
 export function useSound() {
@@ -71,33 +78,181 @@ function createSoundSystem() {
     } catch (e) { /* silent fail */ }
   };
 
-  const playWhoosh = () => {
+  const playCakeCandles = () => {
+    try {
+      const puff = (delay) => setTimeout(() => {
+        const ac = getCtx();
+        const buf = ac.createBuffer(1, ac.sampleRate * 0.04, ac.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < buf.length; i++) {
+          data[i] = (Math.random() * 2 - 1) * (1 - i / buf.length) * 0.15;
+        }
+        const src = ac.createBufferSource();
+        src.buffer = buf;
+        const filter = ac.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 800;
+        const gain = ac.createGain();
+        gain.gain.setValueAtTime(0.12, ac.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.08);
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(ac.destination);
+        src.start();
+      }, delay);
+      puff(0); puff(120); puff(240);
+    } catch (e) { }
+  };
+
+  const playEnvelopeHold = () => {
     try {
       const ac = getCtx();
-      const bufferSize = ac.sampleRate * 0.2;
-      const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = (Math.random() * 2 - 1) * 0.04;
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(180, ac.currentTime);
+      osc.frequency.linearRampToValueAtTime(320, ac.currentTime + 0.6);
+      gain.gain.setValueAtTime(0.04, ac.currentTime);
+      gain.gain.linearRampToValueAtTime(0.07, ac.currentTime + 0.5);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.65);
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start(ac.currentTime);
+      osc.stop(ac.currentTime + 0.7);
+      return osc;
+    } catch (e) { return null; }
+  };
+
+  const playWaxCrack = () => {
+    try {
+      const crack = (volume, duration) => {
+        const ac = getCtx();
+        const buf = ac.createBuffer(1, ac.sampleRate * duration, ac.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < buf.length; i++) {
+          const env = Math.pow(1 - i / buf.length, 1.5);
+          data[i] = (Math.random() * 2 - 1) * volume * env;
+        }
+        const src = ac.createBufferSource();
+        src.buffer = buf;
+        const filter = ac.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 800;
+        const gain = ac.createGain();
+        gain.gain.setValueAtTime(volume, ac.currentTime);
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(ac.destination);
+        src.start();
+      };
+      crack(0.35, 0.08);
+      setTimeout(() => crack(0.15, 0.05), 45);
+      setTimeout(() => crack(0.08, 0.04), 85);
+    } catch (e) { }
+  };
+
+  const playEnvelopeSlide = () => {
+    try {
+      const ac = getCtx();
+      const buf = ac.createBuffer(1, ac.sampleRate * 0.3, ac.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < buf.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.08;
       }
-      const source = ac.createBufferSource();
-      source.buffer = buffer;
+      const src = ac.createBufferSource();
+      src.buffer = buf;
       const filter = ac.createBiquadFilter();
       filter.type = 'bandpass';
       filter.frequency.setValueAtTime(200, ac.currentTime);
-      filter.frequency.exponentialRampToValueAtTime(800, ac.currentTime + 0.2);
-      filter.Q.setValueAtTime(2, ac.currentTime);
+      filter.frequency.linearRampToValueAtTime(600, ac.currentTime + 0.3);
+      filter.Q.value = 3;
       const gain = ac.createGain();
-      gain.gain.setValueAtTime(0.1, ac.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.2);
-      source.connect(filter);
+      gain.gain.setValueAtTime(0.08, ac.currentTime);
+      gain.gain.setValueAtTime(0.06, ac.currentTime + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.32);
+      src.connect(filter);
       filter.connect(gain);
       gain.connect(ac.destination);
-      source.start(ac.currentTime);
+      src.start();
+    } catch (e) { }
+  };
+
+  const playWordDissolve = () => {
+    try {
+      const ac = getCtx();
+      const buf = ac.createBuffer(1, ac.sampleRate * 0.2, ac.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < buf.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.05;
+      }
+      const src = ac.createBufferSource();
+      src.buffer = buf;
+      const filter = ac.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(300, ac.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(1200, ac.currentTime + 0.1);
+      filter.frequency.exponentialRampToValueAtTime(200, ac.currentTime + 0.2);
+      filter.Q.value = 4;
+      const gain = ac.createGain();
+      gain.gain.setValueAtTime(0.1, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.22);
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(ac.destination);
+      src.start();
     } catch (e) { /* silent fail */ }
   };
 
-  return { playChime, playRustle, playWhoosh };
+  const playPolaroidSettle = () => {
+    try {
+      const ac = getCtx();
+      const osc = ac.createOscillator();
+      const og = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(80, ac.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, ac.currentTime + 0.08);
+      og.gain.setValueAtTime(0.15, ac.currentTime);
+      og.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.1);
+      osc.connect(og); og.connect(ac.destination);
+      osc.start(); osc.stop(ac.currentTime + 0.12);
+
+      const buf = ac.createBuffer(1, ac.sampleRate * 0.03, ac.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < buf.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.1 * (1 - i / buf.length);
+      }
+      const src = ac.createBufferSource();
+      src.buffer = buf;
+      const ng = ac.createGain();
+      ng.gain.setValueAtTime(0.08, ac.currentTime);
+      src.connect(ng); ng.connect(ac.destination);
+      src.start();
+    } catch (e) { }
+  };
+
+  const playBirthdayChime = () => {
+    try {
+      const ac = getCtx();
+      const freqs = [523.25, 659.25, 783.99]; // C5, E5, G5
+      freqs.forEach((freq, i) => {
+        setTimeout(() => {
+          const osc = ac.createOscillator();
+          const gain = ac.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0, ac.currentTime);
+          gain.gain.linearRampToValueAtTime(0.1, ac.currentTime + 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.5);
+          osc.connect(gain);
+          gain.connect(ac.destination);
+          osc.start(ac.currentTime);
+          osc.stop(ac.currentTime + 0.55);
+        }, i * 180);
+      });
+    } catch (e) { }
+  };
+
+  return { playChime, playRustle, playCakeCandles, playEnvelopeHold, playWaxCrack, playEnvelopeSlide, playWordDissolve, playPolaroidSettle, playBirthdayChime };
 }
 
 /* ═══════════════════════════════════════════
@@ -231,9 +386,16 @@ function App() {
   }, []);
 
   const soundApi = {
+    isMuted,
     playChime: () => { if (!isMuted) getSounds().playChime(); },
     playRustle: () => { if (!isMuted) getSounds().playRustle(); },
-    playWhoosh: () => { if (!isMuted) getSounds().playWhoosh(); },
+    playCakeCandles: () => { if (!isMuted) getSounds().playCakeCandles(); },
+    playEnvelopeHold: () => { return !isMuted ? getSounds().playEnvelopeHold() : null; },
+    playWaxCrack: () => { if (!isMuted) getSounds().playWaxCrack(); },
+    playEnvelopeSlide: () => { if (!isMuted) getSounds().playEnvelopeSlide(); },
+    playWordDissolve: () => { if (!isMuted) getSounds().playWordDissolve(); },
+    playPolaroidSettle: () => { if (!isMuted) getSounds().playPolaroidSettle(); },
+    playBirthdayChime: () => { if (!isMuted) getSounds().playBirthdayChime(); },
   };
 
   // Scroll idle detection

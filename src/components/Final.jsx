@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSound } from '../App';
 
 const Frosting = ({ id }) => (
     <svg width="100%" height="15" style={{ position: 'absolute', top: 0, left: 0, opacity: 0.8, pointerEvents: 'none' }}>
@@ -13,6 +14,7 @@ const Frosting = ({ id }) => (
 );
 
 export default function Final() {
+    const { playCakeCandles, playBirthdayChime } = useSound();
     const [stage, setStage] = useState(0); // 0=cake, 1=so-gyiii, 2=just-kidding, 3=final-message
     const [showEasterEgg, setShowEasterEgg] = useState(false);
     const [heartHoverStart, setHeartHoverStart] = useState(null);
@@ -34,6 +36,7 @@ export default function Final() {
 
             setTimeout(() => {
                 setStage(3);
+                setTimeout(() => playBirthdayChime(), 800);
             }, 2500);
 
         }, 3000);
@@ -119,6 +122,7 @@ export default function Final() {
 
     const handleBlow = () => {
         if (phase > 0) return;
+        playCakeCandles();
         setPhase(1); // Phase 1: flames out 0-400ms
 
         if (reqFrameRef.current) cancelAnimationFrame(reqFrameRef.current);

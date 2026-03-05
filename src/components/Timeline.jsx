@@ -80,25 +80,38 @@ function TypewriterMemory({ text, isVisible }) {
     );
 }
 
-function TimelineCard({ entry, index }) {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: true, margin: "-80px" });
+function TimelineCard({ entry, index, isLast, onMeasure }) {
+    const cardRef = useRef(null);
+    const isInView = useInView(cardRef, { once: true, margin: "-80px" });
     const isLeft = index % 2 === 0;
     const rotation = isLeft ? -1.5 : 1.2;
     const tapeRotation = isLeft ? -3 : 2;
 
+    useEffect(() => {
+        if (!cardRef.current) return;
+        const update = () => {
+            onMeasure(index, cardRef.current.offsetTop, cardRef.current.offsetHeight);
+        };
+        const t = setTimeout(update, 100);
+        window.addEventListener('resize', update);
+        return () => {
+            clearTimeout(t);
+            window.removeEventListener('resize', update);
+        };
+    }, [index, onMeasure]);
+
     return (
         <motion.div
-            ref={ref}
+            ref={cardRef}
             initial={{ opacity: 0, y: 30, x: isLeft ? -20 : 20 }}
             animate={isInView ? { opacity: 1, y: 0, x: 0 } : {}}
-            transition={{ duration: 0.7, ease: "easeOut", delay: 0.15 }}
+            transition={{ type: "spring", stiffness: 80, damping: 12, delay: 0.1 }}
             style={{
                 position: 'relative',
                 width: '280px',
                 background: '#fffdf9',
                 border: '1px solid rgba(184,156,230,0.25)',
-                boxShadow: '2px 4px 12px rgba(0,0,0,0.06)',
+                boxShadow: isLast ? '0 0 20px rgba(184,156,230,0.15), 2px 4px 12px rgba(0,0,0,0.06)' : '2px 4px 12px rgba(0,0,0,0.06)',
                 borderRadius: 6,
                 padding: '28px 22px 22px',
                 transform: `rotate(${rotation}deg)`,
@@ -136,9 +149,9 @@ function TimelineCard({ entry, index }) {
                 fontFamily: "'Playfair Display', Georgia, serif",
                 fontStyle: 'italic',
                 fontSize: '1rem',
-                color: '#3e3552',
+                color: isLast ? '#b89ce6' : '#3e3552',
                 marginBottom: 10,
-                fontWeight: 500,
+                fontWeight: isLast ? 600 : 500,
             }}>
                 {entry.label}
             </p>
@@ -150,6 +163,15 @@ function TimelineCard({ entry, index }) {
 }
 
 export default function Timeline() {
+    const [cardPos, setCardPos] = useState({});
+
+    const handleMeasure = React.useCallback((index, top, height) => {
+        setCardPos(prev => {
+            if (prev[index]?.top === top && prev[index]?.height === height) return prev;
+            return { ...prev, [index]: { top, height } };
+        });
+    }, []);
+
     return (
         <section id="timeline" style={{
             padding: '5rem 2rem',
@@ -186,24 +208,76 @@ export default function Timeline() {
                 gap: '2.5rem',
             }}>
                 {/* Vertical spine line */}
-                <motion.div
-                    initial={{ height: 0 }}
-                    whileInView={{ height: '100%' }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1.5, ease: "easeInOut" }}
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: '50%',
-                        width: 1,
-                        background: 'linear-gradient(to bottom, transparent, rgba(184,156,230,0.3), rgba(184,156,230,0.3), transparent)',
-                        transform: 'translateX(-50%)',
-                        zIndex: 0,
-                    }}
-                />
+                <svg style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 20,
+                    height: '100%',
+                    overflow: 'visible',
+                    zIndex: 0,
+                    pointerEvents: 'none',
+                }}>
+                    <motion.line
+                        x1="10" y1="0"
+                        x2="10" y2="100%"
+                        stroke="rgba(184,156,230,0.3)"
+                        strokeWidth="1"
+                        strokeDasharray="6 10"
+                        initial={{ pathLength: 0 }}
+                        whileInView={{ pathLength: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 2.0, ease: "easeInOut" }}
+                    />
+                </svg>
+
+                {/* ✦ Markers outside of TimelineCard */}
+                {ENTRIES.map((_, i) => {
+                    const pos = cardPos[i];
+                    if (!pos) return null;
+                    const isLast = i === ENTRIES.length - 1;
+                    return (
+                        <motion.span
+                            key={`marker-${i}`}
+                            initial={{ opacity: 0, scale: 0 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true, margin: "-80px" }}
+                            transition={{ delay: 0.4, type: 'spring', stiffness: 300, damping: 15 }}
+                            style={{
+                                position: 'absolute',
+                                left: '50%',
+                                top: pos.top + (pos.height / 2),
+                                transform: 'translate(-50%, -50%)',
+                                fontSize: isLast ? 14 : 10,
+                                color: '#b89ce6',
+                                pointerEvents: 'none',
+                                zIndex: 2,
+                            }}
+                        >
+                            {isLast ? (
+                                <motion.span
+                                    animate={{ scale: [1, 1.3, 1] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                                    style={{ display: 'inline-block' }}
+                                >
+                                    ✦
+                                </motion.span>
+                            ) : (
+                                "✦"
+                            )}
+                        </motion.span>
+                    );
+                })}
 
                 {ENTRIES.map((entry, i) => (
-                    <TimelineCard key={i} entry={entry} index={i} />
+                    <TimelineCard
+                        key={i}
+                        entry={entry}
+                        index={i}
+                        isLast={i === ENTRIES.length - 1}
+                        onMeasure={handleMeasure}
+                    />
                 ))}
             </div>
         </section>

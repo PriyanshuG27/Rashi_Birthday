@@ -1,128 +1,148 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Shield, Sparkles, Moon } from 'lucide-react';
 
-const CARD_STYLES = [
-    { bg: '#fef9f0', radius: '3px 12px 8px 14px', rotation: -1.5, tapeRotate: -3 },
-    { bg: '#f3effe', radius: '12px 4px 14px 6px', rotation: 1.2, tapeRotate: 2 },
-    { bg: '#fef0f5', radius: '6px 14px 3px 10px', rotation: -0.8, tapeRotate: -5 },
-    { bg: '#f0fef4', radius: '14px 6px 12px 4px', rotation: 1.8, tapeRotate: 4 },
+const RECEIPT_LINES = [
+    { text: 'RASHIII & CO.', type: 'header', delay: 0 },
+    { text: 'est. somewhere in 2024', type: 'subheader', delay: 0.15 },
+    { text: '─────────────────', type: 'divider', delay: 0.25 },
+    { text: 'what actually changed', type: 'section', delay: 0.35 },
+    { text: '─────────────────', type: 'divider', delay: 0.45 },
+    { text: 'started apologising     ✓', type: 'item', delay: 0.55 },
+    { text: '(not just moving on)', type: 'note', delay: 0.65 },
+    { text: '', type: 'spacer', delay: 0.7 },
+    { text: 'stopped assuming worst  ✓', type: 'item', delay: 0.8 },
+    { text: '(took a while. she helped.)', type: 'note', delay: 0.9 },
+    { text: '', type: 'spacer', delay: 0.95 },
+    { text: 'learned the difference', type: 'item', delay: 1.05 },
+    { text: 'between forgiven        ✓', type: 'item', delay: 1.1 },
+    { text: 'and understood', type: 'item', delay: 1.15 },
+    { text: '(she gave both)', type: 'note', delay: 1.22 },
+    { text: '', type: 'spacer', delay: 1.27 },
+    { text: 'got better at staying   ✓', type: 'item', delay: 1.35 },
+    { text: '(had a good example)', type: 'note', delay: 1.45 },
+    { text: '─────────────────', type: 'divider', delay: 1.55 },
+    { text: 'SUBTOTAL:    all of it', type: 'total', delay: 1.65 },
+    { text: 'DISCOUNT:    none. ever.', type: 'total', delay: 1.72 },
+    { text: 'TAX:         worth it', type: 'total', delay: 1.79 },
+    { text: '─────────────────', type: 'divider', delay: 1.87 },
+    { text: 'amount owed: unpayable', type: 'final', delay: 2.0 },
+    { text: '', type: 'spacer', delay: 2.1 },
+    { text: 'thank you for every', type: 'closing', delay: 2.2 },
+    { text: 'chance you gave.', type: 'closing', delay: 2.3 },
+    { text: '─────────────────', type: 'divider', delay: 2.4 },
+    { text: '* keep receipt', type: 'footer', delay: 2.5 },
+    { text: '  it matters.', type: 'footer', delay: 2.58 },
+    { text: '─────────────────', type: 'divider', delay: 2.65 },
 ];
 
 export default function Status() {
-    const list = [
-        { label: "Vibe Match", value: "Rare", delay: 0, icon: <Heart size={24} fill="var(--color-pink)" color="var(--color-pink)" /> },
-        { label: "Patience", value: "Selective", delay: 0.6, icon: <Shield size={24} color="var(--color-text)" strokeWidth={1.5} /> },
-        { label: "Humor", value: "Dry / Sarcastic", delay: 1.2, icon: <Sparkles size={24} color="var(--color-accent)" /> },
-        { label: "Current Status", value: "Sleep Mode", delay: 1.8, icon: <Moon size={24} color="var(--color-accent)" /> }
-    ];
+    const renderLine = (item, i) => {
+        if (item.type === 'spacer') {
+            return <div key={i} style={{ height: '0.8rem' }} />;
+        }
+
+        let style = {};
+        switch (item.type) {
+            case 'header':
+                style = { fontFamily: "'Caveat', cursive", fontSize: '1.3rem', color: '#3e3552', fontWeight: 'bold', textAlign: 'center' };
+                break;
+            case 'subheader':
+                style = { fontFamily: "'Caveat', cursive", fontSize: '0.85rem', color: '#3e3552', opacity: 0.5, textAlign: 'center' };
+                break;
+            case 'divider':
+                style = { fontFamily: "'Courier New', Courier, monospace", fontSize: '0.75rem', color: 'rgba(62,53,82,0.2)', textAlign: 'center' };
+                break;
+            case 'section':
+                style = { fontFamily: "'Caveat', cursive", fontSize: '0.9rem', color: '#b89ce6', textAlign: 'center' };
+                break;
+            case 'item':
+                style = { fontFamily: "'Courier New', Courier, monospace", fontSize: '0.82rem', color: '#3e3552' };
+                break;
+            case 'note':
+                style = { fontFamily: "'Caveat', cursive", fontSize: '0.85rem', color: '#3e3552', opacity: 0.45, paddingLeft: '12px', fontStyle: 'italic' };
+                break;
+            case 'total':
+                style = { fontFamily: "'Courier New', Courier, monospace", fontSize: '0.82rem', color: '#3e3552' };
+                break;
+            case 'final':
+                style = { fontFamily: "'Caveat', cursive", fontSize: '1.1rem', color: '#3e3552', textAlign: 'center', fontWeight: 600 };
+                break;
+            case 'closing':
+                style = { fontFamily: "'Caveat', cursive", fontSize: '0.95rem', color: '#b89ce6', textAlign: 'center' };
+                break;
+            case 'footer':
+                style = { fontFamily: "'Courier New', Courier, monospace", fontSize: '0.75rem', color: '#3e3552', opacity: 0.4 };
+                break;
+            default:
+                break;
+        }
+
+        return (
+            <motion.div
+                key={i}
+                initial={{ opacity: 0, y: -4 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-20px" }}
+                transition={{ duration: 0.2, delay: item.delay }}
+                style={{ ...style, whiteSpace: 'pre', lineHeight: 1.4 }}
+            >
+                {item.text}
+            </motion.div>
+        );
+    };
 
     return (
-        <section className="status-section" id="status">
-            <div className="status-inner">
-                {/* Handwritten title instead of "System Diagnostics" */}
-                <p style={{
-                    fontFamily: 'var(--font-handwriting)',
-                    fontSize: '1.3rem',
-                    color: '#b89ce6',
-                    textAlign: 'center',
-                    marginBottom: '2.5rem',
+        <section id="status" style={{ padding: '6rem 2rem' }}>
+            <div style={{
+                maxWidth: '320px',
+                margin: '0 auto',
+                position: 'relative',
+            }}>
+                {/* Mini Printer SVG */}
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginBottom: '1rem',
+                    opacity: 0.4
                 }}>
-                    ✦ a few things about her ✦
-                </p>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b89ce6" strokeWidth="1.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                        <rect x="6" y="14" width="12" height="8" strokeLinecap="round" strokeLinejoin="round" />
+                        <line x1="10" y1="18" x2="14" y2="18" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                </div>
 
-                <div className="status-grid">
-                    {list.map((item, i) => {
-                        const isLast = i === list.length - 1;
-                        const style = CARD_STYLES[i];
+                {/* Receipt Wrapper */}
+                <div style={{
+                    background: '#fffdf9',
+                    padding: '32px 28px 28px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 20px 40px rgba(0,0,0,0.04), inset 0 0 0 1px rgba(0,0,0,0.04)',
+                    position: 'relative',
+                }}>
+                    {/* Torn Edge Top */}
+                    <svg width="100%" height="12"
+                        style={{ position: 'absolute', top: -11, left: 0 }}
+                        viewBox="0 0 320 12" preserveAspectRatio="none">
+                        <path
+                            d="M0,12 C20,4 40,10 60,6 C80,2 100,8 120,4 C140,0 160,8 180,5 C200,2 220,9 240,5 C260,1 280,7 300,4 C310,2 315,6 320,3 L320,12 Z"
+                            fill="#fffdf9"
+                        />
+                    </svg>
 
-                        return (
-                            <motion.div
-                                key={i}
-                                className="status-card"
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: "-50px" }}
-                                transition={{ duration: 0.6, delay: item.delay, ease: "easeOut" }}
-                                style={{
-                                    background: style.bg,
-                                    borderRadius: style.radius,
-                                    transform: `rotate(${style.rotation}deg)`,
-                                    overflow: 'visible',
-                                    position: 'relative',
-                                }}
-                            >
-                                {/* Tape piece at top */}
-                                <div style={{
-                                    position: 'absolute',
-                                    top: -7,
-                                    left: '50%',
-                                    marginLeft: -20,
-                                    width: 40,
-                                    height: 14,
-                                    background: 'rgba(220,210,240,0.65)',
-                                    borderRadius: 2,
-                                    transform: `rotate(${style.tapeRotate}deg)`,
-                                    zIndex: 5,
-                                }} />
+                    {/* Receipt Content */}
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        {RECEIPT_LINES.map((item, i) => renderLine(item, i))}
+                    </div>
 
-                                <div className="status-card-inner">
-                                    <div className="status-header">
-                                        <motion.div
-                                            className="status-icon-wrap"
-                                            whileHover={{ scale: 1.1, rotate: 10 }}
-                                        >
-                                            {item.icon}
-                                        </motion.div>
-
-                                        <div className="status-check-wrap">
-                                            <svg viewBox="0 0 24 24" fill="none" className="check-mark">
-                                                <motion.polyline
-                                                    points="20 6 9 17 4 12"
-                                                    stroke="var(--color-accent)"
-                                                    strokeWidth="2.5"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    initial={{ pathLength: 0, opacity: 0 }}
-                                                    whileInView={{ pathLength: 1, opacity: 1 }}
-                                                    viewport={{ once: true }}
-                                                    transition={{ duration: 0.5, delay: item.delay + 1.0, ease: "easeOut" }}
-                                                />
-                                            </svg>
-                                        </div>
-                                    </div>
-
-                                    <div className="status-content">
-                                        <span className="status-label" style={{
-                                            fontFamily: 'var(--font-handwriting)',
-                                            fontSize: '1rem',
-                                            textTransform: 'none',
-                                            letterSpacing: 'normal',
-                                        }}>
-                                            {item.label}
-                                        </span>
-                                        <span className={`status-detail ${isLast ? 'status-active-color' : ''}`} style={{
-                                            fontFamily: "'Playfair Display', Georgia, serif",
-                                            fontStyle: 'italic',
-                                            fontSize: '1.3rem',
-                                        }}>
-                                            {item.value}
-                                        </span>
-                                    </div>
-
-                                    {isLast && (
-                                        <motion.span
-                                            className="status-zzz-float"
-                                            animate={{ opacity: [0, 1, 0], y: [0, -10, -20], x: [0, 5, -5] }}
-                                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                                        >
-                                            Zzz
-                                        </motion.span>
-                                    )}
-                                </div>
-                            </motion.div>
-                        )
-                    })}
+                    {/* Torn Edge Bottom */}
+                    <svg width="100%" height="12"
+                        style={{ position: 'absolute', bottom: -11, left: 0, transform: 'scaleY(-1)' }}
+                        viewBox="0 0 320 12" preserveAspectRatio="none">
+                        <path
+                            d="M0,12 C20,4 40,10 60,6 C80,2 100,8 120,4 C140,0 160,8 180,5 C200,2 220,9 240,5 C260,1 280,7 300,4 C310,2 315,6 320,3 L320,12 Z"
+                            fill="#fffdf9"
+                        />
+                    </svg>
                 </div>
             </div>
         </section>

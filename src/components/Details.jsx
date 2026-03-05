@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
 import WatercolorReveal from './WatercolorReveal';
 import TypewriterText from './TypewriterText';
+import { useSound } from '../App';
 
 /* ─── WORD DATA ─── */
 const WORDS = [
@@ -526,6 +527,7 @@ function DissolutionParticles({ originX, originY }) {
    Scroll-aware centering (Fix #5)
    ═════════════════════════════════════════════════════════════ */
 function ActiveCard({ chip, phase, originX, originY, sectionRef, onPhaseChange }) {
+    const { playPolaroidSettle } = useSound();
     const isSecret = chip.secret;
     const cardWidth = isSecret ? 360 : 340;
     const cardHeight = isSecret ? 400 : 380;
@@ -543,8 +545,9 @@ function ActiveCard({ chip, phase, originX, originY, sectionRef, onPhaseChange }
 
     // When polaroid entrance completes → advance to typing
     const handlePolaroidSettled = useCallback(() => {
+        playPolaroidSettle();
         onPhaseChange('typing');
-    }, [onPhaseChange]);
+    }, [onPhaseChange, playPolaroidSettle]);
 
     if (isSecret) {
         // ── "Still here." — flash-in behavior ──
@@ -844,6 +847,7 @@ function FoundAllText() {
    MAIN DETAILS COMPONENT
    ═════════════════════════════════════════════════════════════ */
 export default function Details() {
+    const { playWordDissolve } = useSound();
     const sectionRef = useRef(null);
     const wordRefs = useRef([]);
 
@@ -972,6 +976,7 @@ export default function Details() {
     const handleSelect = useCallback(
         (index, e) => {
             if (activeWord) return;
+            playWordDissolve();
             const wordData = WORDS[index];
             const sectionRect = sectionRef.current?.getBoundingClientRect();
             if (!sectionRect) return;

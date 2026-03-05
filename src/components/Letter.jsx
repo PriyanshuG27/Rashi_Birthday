@@ -1,6 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence, useInView } from 'framer-motion';
 import { Heart, Sparkles } from 'lucide-react';
+import { useSound } from '../App';
+
+const LETTER_PHOTO = '/collage_photo_1_1772561726663.png';
 
 /* ═══════════════════════════════════════════
    CASSETTE TAPE SVG (Part 7)
@@ -161,22 +164,28 @@ function CassetteTape() {
    ENVELOPE (Hold to Open Interaction)
    ═══════════════════════════════════════════ */
 function Envelope({ onOpen }) {
+    const { playEnvelopeHold, playWaxCrack, playEnvelopeSlide } = useSound();
     const ref = useRef(null);
     const [holdPhase, setHoldPhase] = useState('idle'); // 'idle' | 'holding' | 'cracking' | 'opening' | 'done'
     const holdTimerRef = useRef(null);
     const [ringProgress, setRingProgress] = useState(0);
+    const holdOscRef = useRef(null);
 
     const handlePointerDown = (e) => {
         if (holdPhase !== 'idle' && holdPhase !== 'holding') return;
         setHoldPhase('holding');
         setRingProgress(1); // Framer Motion will animate this from 0 to 1 over 0.6s
 
+        holdOscRef.current = playEnvelopeHold();
+
         holdTimerRef.current = setTimeout(() => {
             setHoldPhase('cracking');
+            playWaxCrack();
 
             // 400ms later: seal shattered, open flap
             setTimeout(() => {
                 setHoldPhase('opening');
+                setTimeout(() => playEnvelopeSlide(), 100);
 
                 // 1000ms after opening starts: done, show letter
                 setTimeout(() => {
@@ -193,6 +202,10 @@ function Envelope({ onOpen }) {
             clearTimeout(holdTimerRef.current);
             setHoldPhase('idle');
             setRingProgress(0); // Reverse ring animation cleanly
+            if (holdOscRef.current) {
+                try { holdOscRef.current.stop(); } catch (e) { }
+                holdOscRef.current = null;
+            }
         }
     };
 
@@ -407,6 +420,14 @@ export default function Letter() {
     const [envelopeOpened, setEnvelopeOpened] = useState(false);
     const envelopePlayedRef = useRef(false);
 
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 640);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     // Paper Lift Depth
     const rotateX = useTransform(scrollYProgress, [0, 0.5, 1], [10, 0, -10]);
     const rotateY = useTransform(scrollYProgress, [0, 0.5, 1], [-3, 0, 3]);
@@ -498,6 +519,75 @@ export default function Letter() {
                             backgroundPosition: '0 3.8rem',
                             borderRadius: 'inherit',
                         }} />
+
+                        {/* Polaroid Photo */}
+                        {!isMobile && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -40, rotate: -8, x: 20 }}
+                                animate={{ opacity: 1, y: 0, rotate: -4, x: 0 }}
+                                transition={{ delay: 0.8, type: 'spring', stiffness: 100, damping: 12 }}
+                                whileHover={{ y: -6, rotate: -3, boxShadow: '4px 12px 28px rgba(0,0,0,0.18)' }}
+                                style={{
+                                    position: 'absolute',
+                                    top: -30,
+                                    right: -20,
+                                    width: 160,
+                                    background: '#fff',
+                                    padding: '8px 8px 36px 8px',
+                                    boxShadow: '3px 8px 20px rgba(0,0,0,0.12)',
+                                    borderRadius: 2,
+                                    zIndex: 10,
+                                    cursor: 'default',
+                                    transformOrigin: 'center center',
+                                }}
+                            >
+                                {/* Photo */}
+                                <motion.img
+                                    src={LETTER_PHOTO}
+                                    alt=""
+                                    initial={{ filter: 'saturate(0) brightness(1.8)' }}
+                                    animate={{ filter: 'saturate(1) brightness(1)' }}
+                                    transition={{ duration: 1.2, delay: 1.0 }}
+                                    style={{
+                                        width: '100%',
+                                        height: 130,
+                                        objectFit: 'cover',
+                                        borderRadius: 1,
+                                        display: 'block',
+                                    }}
+                                />
+
+                                {/* Caption strip */}
+                                <p style={{
+                                    position: 'absolute',
+                                    bottom: 8,
+                                    left: 0,
+                                    right: 0,
+                                    textAlign: 'center',
+                                    fontFamily: "'Caveat', cursive",
+                                    fontSize: '0.78rem',
+                                    color: '#3e3552',
+                                    opacity: 0.6,
+                                    pointerEvents: 'none',
+                                }}>
+                                    still my favourite ✦
+                                </p>
+
+                                {/* Washi tape at top */}
+                                <div style={{
+                                    position: 'absolute',
+                                    top: -7,
+                                    left: '50%',
+                                    marginLeft: -18,
+                                    width: 36,
+                                    height: 12,
+                                    background: 'rgba(220,210,240,0.8)',
+                                    borderRadius: 2,
+                                    transform: 'rotate(-5deg)',
+                                    zIndex: 5,
+                                }} />
+                            </motion.div>
+                        )}
 
                         {/* Hearts particle system (Double Click) */}
                         <AnimatePresence>
