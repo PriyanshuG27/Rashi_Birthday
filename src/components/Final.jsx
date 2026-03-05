@@ -1,10 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const Frosting = ({ id }) => (
+    <svg width="100%" height="15" style={{ position: 'absolute', top: 0, left: 0, opacity: 0.8, pointerEvents: 'none' }}>
+        <defs>
+            <pattern id={`frosting-pattern-${id}`} width="20" height="15" patternUnits="userSpaceOnUse">
+                <path d="M 0 0 Q 10 15 20 0 Z" fill="white" />
+            </pattern>
+        </defs>
+        <rect width="100%" height="15" fill={`url(#frosting-pattern-${id})`} />
+    </svg>
+);
+
 export default function Final() {
-    const [stage, setStage] = useState(0); // 0=btn, 1=so-gyiii, 2=just-kidding, 3=final-message
+    const [stage, setStage] = useState(0); // 0=cake, 1=so-gyiii, 2=just-kidding, 3=final-message
     const [showEasterEgg, setShowEasterEgg] = useState(false);
     const [heartHoverStart, setHeartHoverStart] = useState(null);
+
+    // Cake Interaction States
+    const [micStatus, setMicStatus] = useState('prompt'); // 'prompt' | 'listening' | 'denied'
+    const [phase, setPhase] = useState(0); // 0: idle, 1: flames out, 2: explode, 3: fade
+    const audioContextRef = useRef(null);
+    const analyserRef = useRef(null);
+    const reqFrameRef = useRef(null);
+
+    const BLOW_THRESHOLD = 0.08;
 
     const handleSequence = () => {
         setStage(1);
@@ -36,55 +56,291 @@ export default function Final() {
         return () => clearTimeout(timer);
     }, [heartHoverStart]);
 
+    // Mic Detection Logic
+    useEffect(() => {
+        if (stage > 0) return;
+        let blowStartTime = null;
+
+        const startMic = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                setMicStatus('listening');
+
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioContextRef.current = audioCtx;
+
+                const analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 512;
+                const source = audioCtx.createMediaStreamSource(stream);
+                source.connect(analyser);
+                analyserRef.current = analyser;
+
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+
+                const checkVolume = () => {
+                    analyser.getByteTimeDomainData(dataArray);
+
+                    let sumSquares = 0.0;
+                    for (let i = 0; i < bufferLength; i++) {
+                        const norm = (dataArray[i] / 128.0) - 1.0;
+                        sumSquares += norm * norm;
+                    }
+                    const rms = Math.sqrt(sumSquares / bufferLength);
+
+                    if (rms > BLOW_THRESHOLD) {
+                        if (!blowStartTime) blowStartTime = performance.now();
+                        else if (performance.now() - blowStartTime > 200) {
+                            handleBlow();
+                            return; // Stop polling
+                        }
+                    } else {
+                        blowStartTime = null;
+                    }
+
+                    reqFrameRef.current = requestAnimationFrame(checkVolume);
+                };
+
+                reqFrameRef.current = requestAnimationFrame(checkVolume);
+            } catch (err) {
+                setMicStatus('denied');
+            }
+        };
+
+        startMic();
+
+        return () => {
+            if (reqFrameRef.current) cancelAnimationFrame(reqFrameRef.current);
+            if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+                audioContextRef.current.close().catch(() => { });
+            }
+        };
+    }, [stage]);
+
+    const handleBlow = () => {
+        if (phase > 0) return;
+        setPhase(1); // Phase 1: flames out 0-400ms
+
+        if (reqFrameRef.current) cancelAnimationFrame(reqFrameRef.current);
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+            audioContextRef.current.close().catch(() => { });
+        }
+
+        setTimeout(() => setPhase(2), 300); // Phase 2: petal explosion
+        setTimeout(() => setPhase(3), 600); // Phase 3: cake fades
+        setTimeout(() => handleSequence(), 800); // Phase 4: Sequence
+    };
+
+    const petalsWave1 = useMemo(() => {
+        const colors = ['#b89ce6', '#f4b6d2', '#fce4f0', '#fff'];
+        return Array.from({ length: 80 }).map((_, i) => ({
+            id: `w1-${i}`,
+            size: 4 + Math.random() * 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            angle: Math.random() * 360,
+            distance: 80 + Math.random() * 320,
+            rotation: Math.random() * 720,
+            duration: 1.2 + Math.random() * 1.2
+        }));
+    }, []);
+
+    const petalsWave2 = useMemo(() => {
+        const colors = ['#b89ce6', '#f4b6d2', '#fce4f0', '#fff'];
+        return Array.from({ length: 40 }).map((_, i) => ({
+            id: `w2-${i}`,
+            size: 4 + Math.random() * 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            angle: -30 + Math.random() * 240,
+            distance: 100 + Math.random() * 300,
+            rotation: Math.random() * 720,
+            duration: 2 + Math.random() * 2
+        }));
+    }, []);
+
     return (
-        <section className="final-section" id="final">
-            {/* Part 9A: Minimal "open" button */}
-            <motion.button
-                className="final-btn"
-                onClick={handleSequence}
-                initial={{ y: 20, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                animate={{ scale: [1, 1.02, 1] }}
-                transition={{
-                    default: { duration: 0.8 },
-                    scale: { duration: 5, repeat: Infinity, ease: "easeInOut" }
-                }}
-                style={{
-                    background: 'none',
-                    border: 'none',
-                    boxShadow: 'none',
-                    padding: '1rem 2rem',
-                    position: 'relative',
-                }}
-            >
-                <span style={{
-                    fontFamily: "'Playfair Display', Georgia, serif",
-                    fontStyle: 'italic',
-                    fontSize: '1.1rem',
-                    color: '#3e3552',
-                    position: 'relative',
-                    zIndex: 2,
-                }}>
-                    open
-                </span>
-                {/* Faint underline on hover */}
-                <motion.span
-                    className="final-btn-underline"
-                    initial={{ scaleX: 0 }}
-                    whileHover={{ scaleX: 1 }}
-                    style={{
-                        position: 'absolute',
-                        bottom: '0.8rem',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '40px',
-                        height: 1,
-                        background: 'rgba(184,156,230,0.4)',
-                        transformOrigin: 'center',
-                    }}
-                />
-            </motion.button>
+        <section className="final-section" id="final" style={{ position: 'relative' }}>
+
+            {/* Background Petal Explosion */}
+            <AnimatePresence>
+                {phase >= 2 && (
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', width: 0, height: 0, zIndex: 0 }}>
+                        {petalsWave1.map(p => (
+                            <motion.div
+                                key={p.id}
+                                initial={{ x: 0, y: 0, rotate: 0, opacity: 1, scale: 0 }}
+                                animate={{
+                                    x: Math.cos(p.angle * Math.PI / 180) * p.distance,
+                                    y: [
+                                        0,
+                                        Math.sin(p.angle * Math.PI / 180) * p.distance,
+                                        Math.sin(p.angle * Math.PI / 180) * p.distance + 200
+                                    ],
+                                    rotate: p.rotation,
+                                    scale: [0, 1, 1],
+                                    opacity: [1, 1, 0]
+                                }}
+                                transition={{ duration: p.duration, times: [0, 0.4, 1], ease: "easeOut" }}
+                                style={{
+                                    position: 'absolute',
+                                    width: p.size, height: p.size,
+                                    backgroundColor: p.color,
+                                    borderRadius: '50% 0 50% 50%',
+                                    transformOrigin: 'center'
+                                }}
+                            />
+                        ))}
+                        {petalsWave2.map(p => (
+                            <motion.div
+                                key={p.id}
+                                initial={{ x: 0, y: 0, rotate: 0, opacity: 0, scale: 0 }}
+                                animate={{
+                                    x: Math.cos(p.angle * Math.PI / 180) * p.distance,
+                                    y: [
+                                        0,
+                                        Math.sin(p.angle * Math.PI / 180) * p.distance,
+                                        Math.sin(p.angle * Math.PI / 180) * p.distance - 150
+                                    ],
+                                    rotate: p.rotation,
+                                    scale: [0, 1, 1],
+                                    opacity: [0, 1, 0]
+                                }}
+                                transition={{ delay: 0.3, duration: p.duration, times: [0, 0.3, 1], ease: "easeOut" }}
+                                style={{
+                                    position: 'absolute',
+                                    width: p.size, height: p.size,
+                                    backgroundColor: p.color,
+                                    borderRadius: '50% 0 50% 50%',
+                                    transformOrigin: 'center'
+                                }}
+                            />
+                        ))}
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Cake Interaction replaces the open button */}
+            {stage === 0 && (
+                <div className="cake-interaction-container" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 1 }}>
+                    <AnimatePresence>
+                        {phase < 3 && (
+                            <motion.div
+                                className="cake-wrapper"
+                                initial={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                transition={{ duration: 0.4 }}
+                                style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
+                                onClick={handleBlow}
+                            >
+                                {/* Candles */}
+                                <div style={{ display: 'flex', gap: '20px', marginBottom: '-2px', position: 'relative', zIndex: 4 }}>
+                                    {[...Array(3)].map((_, i) => (
+                                        <div key={i} style={{ position: 'relative', width: 8, height: 28, background: i % 2 === 0 ? '#b89ce6' : '#f4b6d2', borderRadius: 3 }}>
+                                            <AnimatePresence>
+                                                {phase === 0 && (
+                                                    <motion.div
+                                                        initial={{ scale: 0.9, rotate: -3 }}
+                                                        animate={{ scale: [0.9, 1.1, 0.9], rotate: [-3, 3, -3] }}
+                                                        transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}
+                                                        exit={{ scale: 0, opacity: 0, transition: { duration: 0.2, delay: i * 0.08 } }}
+                                                        style={{ position: 'absolute', top: -14, left: -1, width: 10, height: 12, background: 'linear-gradient(#fff176, #ffb300)', borderRadius: '50% 0 50% 50%', transformOrigin: 'bottom center' }}
+                                                    />
+                                                )}
+                                            </AnimatePresence>
+
+                                            {/* Smoke */}
+                                            {phase >= 1 && (
+                                                <motion.svg
+                                                    initial={{ opacity: 0, y: -10 }}
+                                                    animate={{ opacity: [0, 0.6, 0], y: -30 }}
+                                                    transition={{ duration: 0.6, delay: i * 0.08 + 0.1 }}
+                                                    viewBox="0 0 10 20"
+                                                    style={{ position: 'absolute', top: -30, left: -1, width: 10, height: 20 }}
+                                                >
+                                                    <path d="M5 20 Q 10 15 5 10 T 5 0" fill="none" stroke="gray" strokeWidth="1" />
+                                                </motion.svg>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Top Layer */}
+                                <div style={{ width: 120, height: 40, backgroundColor: '#f3effe', position: 'relative', zIndex: 3, borderRadius: '6px 6px 0 0', overflow: 'hidden' }}>
+                                    <Frosting id="top" />
+                                </div>
+                                {/* Middle Layer */}
+                                <div style={{ width: 160, height: 50, backgroundColor: '#fce4f0', position: 'relative', zIndex: 2, borderRadius: '6px 6px 0 0', marginTop: -2, overflow: 'hidden' }}>
+                                    <Frosting id="mid" />
+                                </div>
+                                {/* Base Layer */}
+                                <div style={{ width: 200, height: 60, backgroundColor: '#f3effe', border: '2px solid #dcd2f0', position: 'relative', zIndex: 1, borderRadius: '6px 6px 12px 12px', marginTop: -2, overflow: 'hidden' }}>
+                                    <Frosting id="base" />
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {phase < 3 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            {micStatus === 'denied' ? (
+                                <motion.div
+                                    animate={{ opacity: [0.5, 0.8, 0.5] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                                    style={{
+                                        fontFamily: 'var(--font-handwriting)',
+                                        fontSize: '1rem',
+                                        color: '#b89ce6',
+                                        marginTop: '2rem',
+                                        cursor: 'pointer',
+                                        position: 'relative',
+                                        zIndex: 10
+                                    }}
+                                    onClick={handleBlow}
+                                >
+                                    tap to open instead ✦
+                                </motion.div>
+                            ) : (
+                                <>
+                                    <motion.div
+                                        animate={{ opacity: [0.5, 0.8, 0.5] }}
+                                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                                        style={{
+                                            fontFamily: 'var(--font-handwriting)',
+                                            fontSize: '1rem',
+                                            color: '#b89ce6',
+                                            marginTop: '2rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            position: 'relative',
+                                            zIndex: 10
+                                        }}
+                                    >
+                                        blow out the candles ✦
+                                        <div style={{
+                                            width: 6, height: 6, borderRadius: '50%',
+                                            backgroundColor: micStatus === 'listening' ? '#a8e6a3' : '#ccc',
+                                            boxShadow: micStatus === 'listening' ? '0 0 6px #a8e6a3' : 'none',
+                                            transition: 'all 0.3s ease'
+                                        }} />
+                                    </motion.div>
+                                    <div style={{
+                                        fontFamily: 'var(--font-handwriting)',
+                                        fontSize: '0.8rem',
+                                        color: '#b89ce6',
+                                        opacity: 0.4,
+                                        marginTop: '0.5rem',
+                                        cursor: 'pointer',
+                                        position: 'relative',
+                                        zIndex: 10
+                                    }} onClick={handleBlow}>
+                                        or tap the cake
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
 
             <AnimatePresence>
                 {stage > 0 && (
@@ -319,3 +575,4 @@ export default function Final() {
         </section>
     );
 }
+

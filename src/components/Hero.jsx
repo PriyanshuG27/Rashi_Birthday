@@ -5,173 +5,74 @@ import { Heart } from 'lucide-react';
 /* ═════════════════════════════════════════════════════════════
    RASHIII CALLIGRAPHY SVG DRAWING ANIMATION
    ═════════════════════════════════════════════════════════════ */
-// Letter timing data — each letter has:
-// delay: when it starts relative to animation start
-// duration: how long it takes to form
-// direction: which way the clip reveals
-// blur: starting blur amount (ink spread feel)
-const LETTER_DATA = [
-    { char: 'R', delay: 0.5, duration: 0.38, blur: 4 },
-    { char: 'a', delay: 0.82, duration: 0.28, blur: 3 },
-    { char: 's', delay: 1.06, duration: 0.32, blur: 3 },
-    { char: 'h', delay: 1.32, duration: 0.30, blur: 3 },
-    { char: 'i', delay: 1.58, duration: 0.18, blur: 2 },
-    { char: 'i', delay: 1.72, duration: 0.18, blur: 2 },
-    { char: 'i', delay: 1.86, duration: 0.18, blur: 2 },
-];
-
-// Each letter component
-const InkLetter = ({ char, delay, duration, blur }) => {
-    const progress = useMotionValue(0);
-    const clipRight = useTransform(
-        progress, [0, 1], ['100%', '0%']
-    );
-    const clipStyle = useTransform(
-        clipRight, v => `inset(0 ${v} 0 0)`
-    );
-    const blurStyle = useTransform(
-        progress, [0, 0.4, 1],
-        [`blur(${blur}px)`, `blur(${blur * 0.5}px)`, 'blur(0px)']
-    );
-    const scaleStyle = useTransform(
-        progress, [0, 0.3, 1], [0.88, 1.04, 1]
-    );
-
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            animate(progress, 1, {
-                duration,
-                ease: [0.2, 0, 0.3, 1],
-            });
-        }, delay * 1000);
-        return () => clearTimeout(timeout);
-    }, []);
-
-    return (
-        <span style={{
-            position: 'relative',
-            display: 'inline-block'
-        }}>
-            {/* Ghost letter — holds space */}
-            <span style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontStyle: 'italic',
-                fontWeight: 500,
-                fontSize: 'clamp(3.8rem, 9vw, 6rem)',
-                color: 'transparent',
-                display: 'inline-block',
-                letterSpacing: '-0.01em',
-            }}>
-                {char}
-            </span>
-
-            {/* Ink letter — reveals with clip + blur */}
-            <motion.span style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontStyle: 'italic',
-                fontWeight: 500,
-                fontSize: 'clamp(3.8rem, 9vw, 6rem)',
-                color: '#3e3552',
-                display: 'inline-block',
-                letterSpacing: '-0.01em',
-                clipPath: clipStyle,
-                filter: blurStyle,
-                scale: scaleStyle,
-                transformOrigin: 'left center',
-            }}>
-                {char}
-            </motion.span>
-        </span>
-    );
-};
-
-// INK NIB — the moving pen tip
-// Rides across the text as letters form
-const InkNib = () => {
-    const nibX = useMotionValue(0);
-    const nibOpacity = useMotionValue(0);
-
-    useEffect(() => {
-        // Nib starts at left edge of R, travels right
-        // timing matches letter delays above
-        setTimeout(() => {
-            nibOpacity.set(1);
-            animate(nibX, 105, {  // 105% = past last letter
-                duration: 1.86,     // matches last letter start
-                ease: 'linear',
-                delay: 0,
-            });
-            // Fade out after last letter
-            setTimeout(() => {
-                animate(nibOpacity, 0, { duration: 0.3 });
-            }, 1900);
-        }, 500);  // matches first letter delay
-    }, []);
-
-    return (
-        <motion.div style={{
-            position: 'absolute',
-            top: '15%',
-            left: nibX.get() + '%',
-            x: nibX,
-            opacity: nibOpacity,
-            pointerEvents: 'none',
-            zIndex: 10,
-        }}>
-            {/* Ink drop shape */}
-            <div style={{
-                width: 6,
-                height: 10,
-                background: 'radial-gradient(ellipse at 40% 30%, rgba(62,53,82,0.5), rgba(184,156,230,0.3))',
-                borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%',
-                filter: 'blur(1px)',
-                transform: 'rotate(-15deg)',
-            }} />
-            {/* Ink trail — faint line behind the nib */}
-            <motion.div style={{
-                position: 'absolute',
-                top: '50%',
-                right: '100%',
-                height: 1.5,
-                width: useTransform(nibX, v => `${v * 6}px`),
-                background: 'linear-gradient(90deg, transparent, rgba(184,156,230,0.15))',
-                transformOrigin: 'right center',
-            }} />
-        </motion.div>
-    );
-};
-
-// MAIN COMPONENT
 const RashiiiCalligraphy = () => {
     return (
-        <div style={{
-            position: 'relative',
-            display: 'inline-block',
-            lineHeight: 1.1,
-        }}>
-            <InkNib />
-            {LETTER_DATA.map((l, i) => (
-                <InkLetter key={i} {...l} />
-            ))}
-            <motion.div
-                initial={{ scaleX: 0, opacity: 0 }}
-                animate={{ scaleX: 1, opacity: 1 }}
-                transition={{
-                    duration: 0.7,
-                    delay: 2.3,
-                    ease: [0.2, 0, 0.2, 1],
-                }}
-                style={{
-                    height: 2,
-                    background: 'linear-gradient(90deg, #b89ce6, rgba(184,156,230,0.15))',
-                    borderRadius: 2,
-                    marginTop: 8,
-                    transformOrigin: 'left center',
-                }}
-            />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 0' }}>
+            <svg
+                width="100%"
+                height="120"
+                viewBox="0 0 700 120"
+                style={{ overflow: 'visible', display: 'block', maxWidth: '700px' }}
+            >
+                <defs>
+                    <linearGradient id="underlineGrad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#b89ce6" />
+                        <stop offset="100%" stopColor="rgba(184,156,230,0.15)" />
+                    </linearGradient>
+
+                    {/* Mask determines what part of the text is visible.
+                        By animating a thick path over the text, we perfectly reveal the text
+                        from bottom-to-top, left-to-right authentic handwriting strokes! */}
+                    <mask id="calligraphy-mask">
+                        {/* The zig-zag spine that traces the letters. Increased bounds to ensure R and iii are fully covered. */}
+                        <motion.path
+                            d="M 175 90 L 210 10 L 250 10 L 250 90 L 280 50 L 280 90 L 310 60 L 310 90 L 330 10 L 330 90 L 350 50 L 350 90 L 380 50 L 380 90 L 410 50 L 410 90 L 440 50 L 440 90 L 470 50 L 470 90 L 510 50 L 510 90"
+                            stroke="white"
+                            strokeWidth="60"
+                            fill="none"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ duration: 2.2, delay: 0.5, ease: [0.2, 0, 0.2, 1] }}
+                        />
+                        {/* The three dotted i's applied at the very end of the stroke! */}
+                        <motion.circle cx="380" cy="30" r="15" fill="white" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.3, delay: 2.8 }} />
+                        <motion.circle cx="410" cy="30" r="15" fill="white" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.3, delay: 2.9 }} />
+                        <motion.circle cx="440" cy="30" r="15" fill="white" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.3, delay: 3.0 }} />
+                    </mask>
+                </defs>
+
+                <text
+                    x="50%"
+                    y="90"
+                    textAnchor="middle"
+                    fontFamily="'Playfair Display', Georgia, serif"
+                    fontStyle="italic"
+                    fontWeight="500"
+                    fontSize="88"
+                    fill="#3e3552"
+                    mask="url(#calligraphy-mask)"
+                >
+                    Rashiii
+                </text>
+
+                {/* Underline drawn right to left matching text width exactly */}
+                <motion.line
+                    x1="225" y1="104"
+                    x2="475" y2="104"
+                    stroke="url(#underlineGrad)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{
+                        duration: 0.7,
+                        delay: 3.2,
+                        ease: [0.2, 0, 0.2, 1]
+                    }}
+                />
+            </svg>
         </div>
     );
 };
