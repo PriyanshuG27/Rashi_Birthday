@@ -38,6 +38,7 @@ export default function Final() {
 
     return (
         <section className="final-section" id="final">
+            {/* Part 9A: Minimal "open" button */}
             <motion.button
                 className="final-btn"
                 onClick={handleSequence}
@@ -49,15 +50,40 @@ export default function Final() {
                     default: { duration: 0.8 },
                     scale: { duration: 5, repeat: Infinity, ease: "easeInOut" }
                 }}
+                style={{
+                    background: 'none',
+                    border: 'none',
+                    boxShadow: 'none',
+                    padding: '1rem 2rem',
+                    position: 'relative',
+                }}
             >
-                <span className="final-btn-text">Confirm Friendship Renewal</span>
+                <span style={{
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                    fontStyle: 'italic',
+                    fontSize: '1.1rem',
+                    color: '#3e3552',
+                    position: 'relative',
+                    zIndex: 2,
+                }}>
+                    open
+                </span>
+                {/* Faint underline on hover */}
                 <motion.span
-                    className="final-btn-sparkle"
-                    animate={{ rotate: 180, scale: [0.8, 1.2, 0.8] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                >
-                    ✨
-                </motion.span>
+                    className="final-btn-underline"
+                    initial={{ scaleX: 0 }}
+                    whileHover={{ scaleX: 1 }}
+                    style={{
+                        position: 'absolute',
+                        bottom: '0.8rem',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '40px',
+                        height: 1,
+                        background: 'rgba(184,156,230,0.4)',
+                        transformOrigin: 'center',
+                    }}
+                />
             </motion.button>
 
             <AnimatePresence>
@@ -70,6 +96,7 @@ export default function Final() {
                     >
                         <div className="final-vignette-overlay" />
                         <AnimatePresence mode="wait">
+                            {/* Stage 1: so gyiii — kept as is */}
                             {stage === 1 && (
                                 <motion.div
                                     key="sogyiii"
@@ -90,6 +117,7 @@ export default function Final() {
                                 </motion.div>
                             )}
 
+                            {/* Stage 2: Just kidding — kept as is */}
                             {stage === 2 && (
                                 <motion.h3
                                     key="kidding"
@@ -103,6 +131,7 @@ export default function Final() {
                                 </motion.h3>
                             )}
 
+                            {/* Stage 3: New final message (Part 9D) */}
                             {stage === 3 && (
                                 <motion.div
                                     key="true-final"
@@ -111,8 +140,74 @@ export default function Final() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 1.5, ease: "easeOut" }}
                                 >
-                                    <p className="final-bday-title">Happy Birthday.</p>
-                                    <p className="final-bday-sub">Stay exactly the way you are.</p>
+                                    {/* Line 1 */}
+                                    <motion.p
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 0.6 }}
+                                        transition={{ duration: 1, delay: 0 }}
+                                        style={{
+                                            fontFamily: 'var(--font-handwriting)',
+                                            fontSize: '1rem',
+                                            color: '#3e3552',
+                                            marginBottom: '1.5rem',
+                                            maxWidth: 400,
+                                            textAlign: 'center',
+                                            lineHeight: 1.6,
+                                        }}
+                                    >
+                                        for someone who fixed me when I didn't even know I was broken —
+                                    </motion.p>
+
+                                    {/* Line 2 */}
+                                    <motion.p
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 1.2, delay: 1.2 }}
+                                        style={{
+                                            fontFamily: "'Playfair Display', Georgia, serif",
+                                            fontStyle: 'italic',
+                                            fontSize: 'clamp(2rem, 6vw, 3.2rem)',
+                                            color: '#3e3552',
+                                            marginBottom: '1.5rem',
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        Happy Birthday, Rashiii.
+                                    </motion.p>
+
+                                    {/* Line 3 */}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 1, delay: 2.4 }}
+                                        style={{
+                                            fontFamily: 'var(--font-handwriting)',
+                                            fontSize: '1.15rem',
+                                            color: '#b89ce6',
+                                            textAlign: 'center',
+                                            marginBottom: '1.5rem',
+                                            lineHeight: 1.8,
+                                        }}
+                                    >
+                                        <p>thank you for every chance you gave me.</p>
+                                        <p>I don't take a single one for granted.</p>
+                                    </motion.div>
+
+                                    {/* Line 4 */}
+                                    <motion.p
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 0.55 }}
+                                        transition={{ duration: 1, delay: 3.6 }}
+                                        style={{
+                                            fontFamily: "'Playfair Display', Georgia, serif",
+                                            fontStyle: 'italic',
+                                            fontSize: '0.95rem',
+                                            color: '#3e3552',
+                                            marginBottom: '2rem',
+                                        }}
+                                    >
+                                        — dumbo
+                                    </motion.p>
 
                                     {/* Animated Heart Outline Draw */}
                                     <motion.div
@@ -130,7 +225,7 @@ export default function Final() {
                                             />
                                         </svg>
 
-                                        {/* Easter Egg Triggered */}
+                                        {/* Easter Egg */}
                                         <AnimatePresence>
                                             {showEasterEgg && (
                                                 <motion.div
@@ -146,40 +241,38 @@ export default function Final() {
                                         </AnimatePresence>
                                     </motion.div>
 
-                                    {/* Fast Petals (Intensified for 2s) */}
+                                    {/* Fast Petals */}
                                     <div className="final-petals">
                                         {[...Array(15)].map((_, i) => (
                                             <motion.div
                                                 key={`fast-${i}`}
                                                 className="petal"
-                                                initial={{ y: -50, x: Math.random() * innerWidth, opacity: 0, rotate: 0 }}
+                                                initial={{ y: -50, x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000), opacity: 0, rotate: 0 }}
                                                 animate={{
-                                                    y: innerHeight + 50,
+                                                    y: (typeof window !== 'undefined' ? window.innerHeight : 800) + 50,
                                                     x: `+=${(Math.random() - 0.5) * 300}`,
                                                     opacity: [0, 1, 0],
                                                     rotate: `+=${Math.random() * 360}`
                                                 }}
-                                                // Short duration, delayed start to match heart draw, stops repeating quickly
                                                 transition={{ duration: 2 + Math.random() * 2, delay: 1.5 + (i * 0.1), ease: "linear", times: [0, 0.5, 1] }}
                                                 style={{ backgroundColor: 'var(--color-pink)' }}
                                             />
                                         ))}
                                     </div>
 
-                                    {/* Slow Settled Petals (Infinite) */}
+                                    {/* Slow Settled Petals */}
                                     <div className="final-petals-slow">
                                         {[...Array(8)].map((_, i) => (
                                             <motion.div
                                                 key={`slow-${i}`}
                                                 className="petal"
-                                                initial={{ y: -50, x: Math.random() * innerWidth, opacity: 0, rotate: 0 }}
+                                                initial={{ y: -50, x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000), opacity: 0, rotate: 0 }}
                                                 animate={{
-                                                    y: innerHeight + 50,
+                                                    y: (typeof window !== 'undefined' ? window.innerHeight : 800) + 50,
                                                     x: `+=${(Math.random() - 0.5) * 100}`,
                                                     opacity: [0, 0.5, 0],
                                                     rotate: `+=${Math.random() * 360}`
                                                 }}
-                                                // Long duration, starts after fast petals
                                                 transition={{ duration: 10 + Math.random() * 5, delay: 3.5 + (i * 1.5), repeat: Infinity, ease: "linear" }}
                                                 style={{ backgroundColor: 'var(--color-accent)' }}
                                             />
@@ -197,15 +290,26 @@ export default function Final() {
                                         transition={{ duration: 4, delay: 1.2, times: [0, 0.3, 1], ease: "easeOut" }}
                                     />
 
-                                    {/* V3 Handwritten Signature */}
-                                    <motion.div
-                                        className="final-signature"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 0.8, x: 0 }}
-                                        transition={{ duration: 1.5, delay: 2.5 }}
+                                    {/* Line 5: Hidden final line */}
+                                    <motion.p
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 0.3 }}
+                                        transition={{ duration: 1.5, delay: 6 }}
+                                        style={{
+                                            fontFamily: 'var(--font-handwriting)',
+                                            fontSize: '0.8rem',
+                                            color: '#3e3552',
+                                            position: 'fixed',
+                                            bottom: 20,
+                                            left: '50%',
+                                            transform: 'translateX(-50%)',
+                                            textAlign: 'center',
+                                            maxWidth: 400,
+                                            zIndex: 10,
+                                        }}
                                     >
-                                        — 17 March
-                                    </motion.div>
+                                        made with too many browser tabs and not enough sleep. worth it. ✦
+                                    </motion.p>
                                 </motion.div>
                             )}
                         </AnimatePresence>

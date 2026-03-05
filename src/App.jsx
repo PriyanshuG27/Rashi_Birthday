@@ -1,20 +1,242 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback, createContext, useContext } from 'react';
 import './App.css';
 
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 // Feature Components
 import Hero from './components/Hero';
 import Profile from './components/Profile';
+import Timeline from './components/Timeline';
 import Details from './components/Details';
 import Letter from './components/Letter';
 import Status from './components/Status';
 import Final from './components/Final';
 
+/* ═══════════════════════════════════════════
+   SOUND CONTEXT (Part 10)
+   ═══════════════════════════════════════════ */
+const SoundContext = createContext({
+  playChime: () => { },
+  playRustle: () => { },
+  playWhoosh: () => { },
+});
+
+export function useSound() {
+  return useContext(SoundContext);
+}
+
+function createSoundSystem() {
+  let ctx = null;
+
+  const getCtx = () => {
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return ctx;
+  };
+
+  const playChime = () => {
+    try {
+      const ac = getCtx();
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, ac.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ac.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.12, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.38);
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start(ac.currentTime);
+      osc.stop(ac.currentTime + 0.4);
+    } catch (e) { /* silent fail */ }
+  };
+
+  const playRustle = () => {
+    try {
+      const ac = getCtx();
+      const bufferSize = ac.sampleRate * 0.08;
+      const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.06;
+      }
+      const source = ac.createBufferSource();
+      source.buffer = buffer;
+      const gain = ac.createGain();
+      gain.gain.setValueAtTime(0.08, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.08);
+      source.connect(gain);
+      gain.connect(ac.destination);
+      source.start(ac.currentTime);
+    } catch (e) { /* silent fail */ }
+  };
+
+  const playWhoosh = () => {
+    try {
+      const ac = getCtx();
+      const bufferSize = ac.sampleRate * 0.2;
+      const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.04;
+      }
+      const source = ac.createBufferSource();
+      source.buffer = buffer;
+      const filter = ac.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(200, ac.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(800, ac.currentTime + 0.2);
+      filter.Q.setValueAtTime(2, ac.currentTime);
+      const gain = ac.createGain();
+      gain.gain.setValueAtTime(0.1, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.2);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(ac.destination);
+      source.start(ac.currentTime);
+    } catch (e) { /* silent fail */ }
+  };
+
+  return { playChime, playRustle, playWhoosh };
+}
+
+/* ═══════════════════════════════════════════
+   CUSTOM CURSOR (Part 2)
+   ═══════════════════════════════════════════ */
+function CustomCursor() {
+  const cursorX = useMotionValue(-100);
+  const cursorY = useMotionValue(-100);
+  const springX = useSpring(cursorX, { stiffness: 200, damping: 20 });
+  const springY = useSpring(cursorY, { stiffness: 200, damping: 20 });
+  const [isPointer, setIsPointer] = useState(false);
+  const [splatters, setSplatters] = useState([]);
+  const splatterIdRef = useRef(0);
+
+  useEffect(() => {
+    const move = (e) => {
+      cursorX.set(e.clientX);
+      cursorY.set(e.clientY);
+
+      // Check if hovering clickable
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      if (el) {
+        const computed = window.getComputedStyle(el);
+        setIsPointer(
+          computed.cursor === 'pointer' ||
+          el.tagName === 'A' ||
+          el.tagName === 'BUTTON' ||
+          el.closest('a') !== null ||
+          el.closest('button') !== null
+        );
+      }
+    };
+
+    const click = (e) => {
+      const id = splatterIdRef.current++;
+      const dots = Array.from({ length: 3 }, (_, i) => ({
+        id: `${id}-${i}`,
+        x: e.clientX,
+        y: e.clientY,
+        dx: (Math.random() - 0.5) * 2 * 70,
+        dy: (Math.random() - 0.5) * 2 * 70,
+      }));
+      setSplatters(prev => [...prev, ...dots]);
+      setTimeout(() => {
+        setSplatters(prev => prev.filter(d => !dots.find(dd => dd.id === d.id)));
+      }, 550);
+    };
+
+    window.addEventListener('mousemove', move);
+    window.addEventListener('click', click);
+    return () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('click', click);
+    };
+  }, [cursorX, cursorY]);
+
+  // Check if device supports hover (skip cursor on touch devices)
+  const [isTouchDevice] = useState(() =>
+    typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+  );
+
+  if (isTouchDevice) return null;
+
+  return (
+    <>
+      {/* Main cursor dot */}
+      <motion.div
+        style={{
+          position: 'fixed',
+          left: springX,
+          top: springY,
+          width: isPointer ? 14 : 8,
+          height: isPointer ? 14 : 8,
+          borderRadius: '50%',
+          background: isPointer ? 'transparent' : '#b89ce6',
+          border: isPointer ? '1.5px solid #b89ce6' : 'none',
+          opacity: 0.85,
+          pointerEvents: 'none',
+          zIndex: 9998,
+          transform: 'translate(-50%, -50%)',
+          transition: 'width 0.15s, height 0.15s, background 0.15s, border 0.15s',
+        }}
+      />
+
+      {/* Click splatters */}
+      <AnimatePresence>
+        {splatters.map(dot => (
+          <motion.div
+            key={dot.id}
+            initial={{ x: dot.x, y: dot.y, scale: 1, opacity: 0.8 }}
+            animate={{
+              x: dot.x + dot.dx,
+              y: dot.y + dot.dy,
+              scale: 0,
+              opacity: 0,
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            style={{
+              position: 'fixed',
+              width: 3,
+              height: 3,
+              borderRadius: '50%',
+              background: '#b89ce6',
+              pointerEvents: 'none',
+              zIndex: 9998,
+              transform: 'translate(-50%, -50%)',
+            }}
+          />
+        ))}
+      </AnimatePresence>
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   APP
+   ═══════════════════════════════════════════ */
 function App() {
   const { scrollYProgress } = useScroll();
   const [showIdleParticles, setShowIdleParticles] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const soundSystemRef = useRef(null);
 
-  // Scroll idle detection (V3.0)
+  // Initialize sound system lazily
+  const getSounds = useCallback(() => {
+    if (!soundSystemRef.current) {
+      soundSystemRef.current = createSoundSystem();
+    }
+    return soundSystemRef.current;
+  }, []);
+
+  const soundApi = {
+    playChime: () => { if (!isMuted) getSounds().playChime(); },
+    playRustle: () => { if (!isMuted) getSounds().playRustle(); },
+    playWhoosh: () => { if (!isMuted) getSounds().playWhoosh(); },
+  };
+
+  // Scroll idle detection
   useEffect(() => {
     let idleTimer;
 
@@ -25,7 +247,7 @@ function App() {
       if (window.scrollY > 150) {
         idleTimer = setTimeout(() => {
           setShowIdleParticles(true);
-        }, 3000); // 3 seconds idle
+        }, 3000);
       }
     };
 
@@ -36,7 +258,7 @@ function App() {
     };
   }, []);
 
-  // Subtle color progression (Global Polish #2)
+  // Subtle color progression
   const bgColor = useTransform(
     scrollYProgress,
     [0, 0.5, 1],
@@ -44,77 +266,111 @@ function App() {
   );
 
   return (
-    <motion.div className="app-container" style={{ backgroundColor: bgColor }}>
+    <SoundContext.Provider value={soundApi}>
+      <motion.div className="app-container" style={{ backgroundColor: bgColor }}>
 
-      {/* GLOBAL FLORAL LAYERS (V3.0) */}
-      <div className="global-floral-layer far-bg">
-        <img src="/lavender_branch.png" className="floral-sprig sprig-1" alt="" />
-        <img src="/lavender_branch.png" className="floral-sprig sprig-2" alt="" />
-        <img src="/lavender_branch.png" className="floral-sprig sprig-3" alt="" />
-      </div>
+        {/* Custom Cursor */}
+        <CustomCursor />
 
-      <div className="global-floral-layer mid-depth">
-        <motion.img
-          src="/lavender_flower.png"
-          className="floral-bloom bloom-1"
-          style={{ y: useTransform(scrollYProgress, [0, 1], [0, -150]) }}
-          alt=""
-        />
-        <motion.img
-          src="/lavender_flower.png"
-          className="floral-bloom bloom-2"
-          style={{ y: useTransform(scrollYProgress, [0, 1], [0, -300]) }}
-          alt=""
-        />
-      </div>
+        {/* GLOBAL FLORAL LAYERS */}
+        <div className="global-floral-layer far-bg">
+          <img src="/lavender_branch.png" className="floral-sprig sprig-1" alt="" />
+          <img src="/lavender_branch.png" className="floral-sprig sprig-2" alt="" />
+          <img src="/lavender_branch.png" className="floral-sprig sprig-3" alt="" />
+        </div>
 
-      {/* Foreground Idle Particles */}
-      <AnimatePresence>
-        {showIdleParticles && (
-          <motion.div
-            className="idle-particles-container"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="idle-particle"
-                initial={{ y: '100vh', x: `${Math.random() * 100}vw`, opacity: 0 }}
-                animate={{
-                  y: '-20vh',
-                  x: `${Math.random() * 100}vw`,
-                  opacity: [0, 0.6, 0],
-                  rotate: Math.random() * 360
-                }}
-                transition={{
-                  duration: 4 + Math.random() * 3,
-                  ease: "easeOut",
-                  delay: Math.random() * 0.8
-                }}
-              >
-                ✿
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <div className="global-floral-layer mid-depth">
+          <motion.img
+            src="/lavender_flower.png"
+            className="floral-bloom bloom-1"
+            style={{ y: useTransform(scrollYProgress, [0, 1], [0, -150]) }}
+            alt=""
+          />
+          <motion.img
+            src="/lavender_flower.png"
+            className="floral-bloom bloom-2"
+            style={{ y: useTransform(scrollYProgress, [0, 1], [0, -300]) }}
+            alt=""
+          />
+        </div>
 
-      <div className="content-layers-wrapper">
-        <Hero />
-        <div className="spacer-wave" />
-        <Profile />
-        <div className="spacer-wave" />
-        <Details />
-        <div className="spacer-wave" />
-        <Letter />
-        <div className="spacer-wave" />
-        <Status />
-        <div className="spacer-wave" />
-        <Final />
-      </div>
-    </motion.div>
+        {/* Foreground Idle Particles */}
+        <AnimatePresence>
+          {showIdleParticles && (
+            <motion.div
+              className="idle-particles-container"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="idle-particle"
+                  initial={{ y: '100vh', x: `${Math.random() * 100}vw`, opacity: 0 }}
+                  animate={{
+                    y: '-20vh',
+                    x: `${Math.random() * 100}vw`,
+                    opacity: [0, 0.6, 0],
+                    rotate: Math.random() * 360
+                  }}
+                  transition={{
+                    duration: 4 + Math.random() * 3,
+                    ease: "easeOut",
+                    delay: Math.random() * 0.8
+                  }}
+                >
+                  ✿
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="content-layers-wrapper">
+          <Hero />
+          <div className="spacer-wave" />
+          <Profile />
+          <div className="spacer-wave" />
+          <Timeline />
+          <div className="spacer-wave" />
+          <Details />
+          <div className="spacer-wave" />
+          <Letter />
+          <div className="spacer-wave" />
+          <Status />
+          <div className="spacer-wave" />
+          <Final />
+        </div>
+
+        {/* Sound Toggle (Part 10) */}
+        <button
+          onClick={() => setIsMuted(m => !m)}
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 999,
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.7)',
+            border: '1px solid rgba(184,156,230,0.3)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '16px',
+            cursor: 'pointer',
+            transition: 'transform 0.2s',
+          }}
+          title={isMuted ? "Unmute sounds" : "Mute sounds"}
+        >
+          {isMuted ? '🔇' : '🔊'}
+        </button>
+      </motion.div>
+    </SoundContext.Provider>
   );
 }
 

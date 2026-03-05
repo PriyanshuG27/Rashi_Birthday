@@ -1,6 +1,180 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
-import { Heart, Sparkles, Star } from 'lucide-react';
+import { motion, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence, animate } from 'framer-motion';
+import { Heart } from 'lucide-react';
+
+/* ═════════════════════════════════════════════════════════════
+   RASHIII CALLIGRAPHY SVG DRAWING ANIMATION
+   ═════════════════════════════════════════════════════════════ */
+// Letter timing data — each letter has:
+// delay: when it starts relative to animation start
+// duration: how long it takes to form
+// direction: which way the clip reveals
+// blur: starting blur amount (ink spread feel)
+const LETTER_DATA = [
+    { char: 'R', delay: 0.5, duration: 0.38, blur: 4 },
+    { char: 'a', delay: 0.82, duration: 0.28, blur: 3 },
+    { char: 's', delay: 1.06, duration: 0.32, blur: 3 },
+    { char: 'h', delay: 1.32, duration: 0.30, blur: 3 },
+    { char: 'i', delay: 1.58, duration: 0.18, blur: 2 },
+    { char: 'i', delay: 1.72, duration: 0.18, blur: 2 },
+    { char: 'i', delay: 1.86, duration: 0.18, blur: 2 },
+];
+
+// Each letter component
+const InkLetter = ({ char, delay, duration, blur }) => {
+    const progress = useMotionValue(0);
+    const clipRight = useTransform(
+        progress, [0, 1], ['100%', '0%']
+    );
+    const clipStyle = useTransform(
+        clipRight, v => `inset(0 ${v} 0 0)`
+    );
+    const blurStyle = useTransform(
+        progress, [0, 0.4, 1],
+        [`blur(${blur}px)`, `blur(${blur * 0.5}px)`, 'blur(0px)']
+    );
+    const scaleStyle = useTransform(
+        progress, [0, 0.3, 1], [0.88, 1.04, 1]
+    );
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            animate(progress, 1, {
+                duration,
+                ease: [0.2, 0, 0.3, 1],
+            });
+        }, delay * 1000);
+        return () => clearTimeout(timeout);
+    }, []);
+
+    return (
+        <span style={{
+            position: 'relative',
+            display: 'inline-block'
+        }}>
+            {/* Ghost letter — holds space */}
+            <span style={{
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(3.8rem, 9vw, 6rem)',
+                color: 'transparent',
+                display: 'inline-block',
+                letterSpacing: '-0.01em',
+            }}>
+                {char}
+            </span>
+
+            {/* Ink letter — reveals with clip + blur */}
+            <motion.span style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(3.8rem, 9vw, 6rem)',
+                color: '#3e3552',
+                display: 'inline-block',
+                letterSpacing: '-0.01em',
+                clipPath: clipStyle,
+                filter: blurStyle,
+                scale: scaleStyle,
+                transformOrigin: 'left center',
+            }}>
+                {char}
+            </motion.span>
+        </span>
+    );
+};
+
+// INK NIB — the moving pen tip
+// Rides across the text as letters form
+const InkNib = () => {
+    const nibX = useMotionValue(0);
+    const nibOpacity = useMotionValue(0);
+
+    useEffect(() => {
+        // Nib starts at left edge of R, travels right
+        // timing matches letter delays above
+        setTimeout(() => {
+            nibOpacity.set(1);
+            animate(nibX, 105, {  // 105% = past last letter
+                duration: 1.86,     // matches last letter start
+                ease: 'linear',
+                delay: 0,
+            });
+            // Fade out after last letter
+            setTimeout(() => {
+                animate(nibOpacity, 0, { duration: 0.3 });
+            }, 1900);
+        }, 500);  // matches first letter delay
+    }, []);
+
+    return (
+        <motion.div style={{
+            position: 'absolute',
+            top: '15%',
+            left: nibX.get() + '%',
+            x: nibX,
+            opacity: nibOpacity,
+            pointerEvents: 'none',
+            zIndex: 10,
+        }}>
+            {/* Ink drop shape */}
+            <div style={{
+                width: 6,
+                height: 10,
+                background: 'radial-gradient(ellipse at 40% 30%, rgba(62,53,82,0.5), rgba(184,156,230,0.3))',
+                borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%',
+                filter: 'blur(1px)',
+                transform: 'rotate(-15deg)',
+            }} />
+            {/* Ink trail — faint line behind the nib */}
+            <motion.div style={{
+                position: 'absolute',
+                top: '50%',
+                right: '100%',
+                height: 1.5,
+                width: useTransform(nibX, v => `${v * 6}px`),
+                background: 'linear-gradient(90deg, transparent, rgba(184,156,230,0.15))',
+                transformOrigin: 'right center',
+            }} />
+        </motion.div>
+    );
+};
+
+// MAIN COMPONENT
+const RashiiiCalligraphy = () => {
+    return (
+        <div style={{
+            position: 'relative',
+            display: 'inline-block',
+            lineHeight: 1.1,
+        }}>
+            <InkNib />
+            {LETTER_DATA.map((l, i) => (
+                <InkLetter key={i} {...l} />
+            ))}
+            <motion.div
+                initial={{ scaleX: 0, opacity: 0 }}
+                animate={{ scaleX: 1, opacity: 1 }}
+                transition={{
+                    duration: 0.7,
+                    delay: 2.3,
+                    ease: [0.2, 0, 0.2, 1],
+                }}
+                style={{
+                    height: 2,
+                    background: 'linear-gradient(90deg, #b89ce6, rgba(184,156,230,0.15))',
+                    borderRadius: 2,
+                    marginTop: 8,
+                    transformOrigin: 'left center',
+                }}
+            />
+        </div>
+    );
+};
 
 export default function Hero() {
     const containerRef = useRef(null);
@@ -20,19 +194,15 @@ export default function Hero() {
     const mouseX = useMotionValue(typeof window !== "undefined" ? window.innerWidth / 2 : 0);
     const mouseY = useMotionValue(typeof window !== "undefined" ? window.innerHeight / 2 : 0);
 
-    // Smooth spring physics for cursor tracking to avoid jitter
     const smoothMouseX = useSpring(mouseX, { damping: 50, stiffness: 400 });
     const smoothMouseY = useSpring(mouseY, { damping: 50, stiffness: 400 });
 
-    // Repel effect for shapes (moves away from cursor)
-    // We map window coords (0 to width) to a small translation (-20px to 20px)
     const repelX1 = useTransform(smoothMouseX, [0, typeof window !== "undefined" ? window.innerWidth : 1000], [30, -30]);
     const repelY1 = useTransform(smoothMouseY, [0, typeof window !== "undefined" ? window.innerHeight : 800], [30, -30]);
 
     const repelX2 = useTransform(smoothMouseX, [0, typeof window !== "undefined" ? window.innerWidth : 1000], [-40, 40]);
     const repelY2 = useTransform(smoothMouseY, [0, typeof window !== "undefined" ? window.innerHeight : 800], [-40, 40]);
 
-    // Gentle pull for the background glow (follows cursor slightly)
     const pullX = useTransform(smoothMouseX, [0, typeof window !== "undefined" ? window.innerWidth : 1000], ["-60%", "-40%"]);
     const pullY = useTransform(smoothMouseY, [0, typeof window !== "undefined" ? window.innerHeight : 800], ["-60%", "-40%"]);
 
@@ -45,13 +215,13 @@ export default function Hero() {
         return () => window.removeEventListener("mousemove", handleMouseMove);
     }, [mouseX, mouseY]);
 
-    // Handle Heart Hover Easter Egg (2s hold)
+    // Heart Hover Easter Egg (2s hold)
     useEffect(() => {
         let hoverTimer;
         if (isHeartHovered) {
             hoverTimer = setTimeout(() => {
                 setHeartBurst(true);
-                setTimeout(() => setHeartBurst(false), 1000); // Reset burst
+                setTimeout(() => setHeartBurst(false), 1000);
             }, 2000);
         }
         return () => clearTimeout(hoverTimer);
@@ -66,7 +236,8 @@ export default function Hero() {
         }
     };
 
-    const titleChars = "Happy birthday Rashiii".split("");
+    // SVG path for "Rashiii" calligraphy
+    const rashiiiPath = "M 10 45 Q 12 15 25 18 Q 38 21 30 40 Q 22 60 35 55 L 45 30 M 50 20 Q 42 25 45 40 Q 48 55 58 35 Q 62 28 55 20 M 68 20 L 65 55 M 68 35 Q 78 25 82 38 Q 86 50 78 55 M 90 20 L 92 55 M 90 35 Q 95 30 98 35 M 105 20 L 107 55 M 105 35 Q 110 30 113 35 M 120 20 L 122 55 M 120 35 Q 125 30 128 35";
 
     return (
         <section
@@ -77,7 +248,7 @@ export default function Hero() {
             style={{ overflow: 'hidden', position: 'relative', cursor: isUnlocked ? 'default' : 'pointer' }}
         >
 
-            {/* V3 Breathing Glow (8s loop) + Cursor Pull */}
+            {/* V3 Breathing Glow + Cursor Pull */}
             <motion.div
                 className="hero-glow-interactive"
                 style={{ x: pullX, y: pullY }}
@@ -98,36 +269,34 @@ export default function Hero() {
                 style={{ x: repelX2, y: repelY2 }}
             />
 
+            {/* Step 1: Section fades in from white */}
+            <motion.div
+                initial={{ opacity: 0, backgroundColor: 'rgba(255,255,255,1)' }}
+                animate={{ opacity: 1, backgroundColor: 'rgba(255,255,255,0)' }}
+                transition={{ duration: 0.4 }}
+                style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}
+            />
+
             <motion.div
                 style={{ y: yText, opacity: opacityText }}
                 className="hero-content"
             >
-                <motion.p
+                {/* Step 2: "Happy Birthday" traces in */}
+                <motion.h2
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, delay: 0.2 }}
-                    className="hero-date"
+                    transition={{ duration: 0.8, delay: 0, ease: "easeOut" }}
+                    style={{
+                        fontFamily: "'Playfair Display', Georgia, serif",
+                        fontStyle: 'italic',
+                        fontSize: 'clamp(1.8rem, 5vw, 3rem)',
+                        fontWeight: 400,
+                        color: '#3e3552',
+                        letterSpacing: '-0.01em',
+                        marginBottom: '0.5rem',
+                    }}
                 >
-                    17 March
-                </motion.p>
-
-                {/* Main Title - Happy birthday Rashiii */}
-                <h1 className="hero-title">
-                    {titleChars.map((char, index) => (
-                        <motion.span
-                            key={index}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                                duration: 0.8,
-                                ease: [0.22, 0.61, 0.36, 1],
-                                delay: 0.4 + index * 0.03
-                            }}
-                            style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : 'normal' }}
-                        >
-                            {char}
-                        </motion.span>
-                    ))}
+                    Happy Birthday
 
                     {/* Interactive Doodle Heart */}
                     <motion.span
@@ -144,7 +313,7 @@ export default function Hero() {
                         onMouseLeave={() => { setIsHeartHovered(false); setHeartBurst(false); }}
                         style={{ cursor: 'pointer', display: 'inline-block' }}
                     >
-                        <Heart size={36} strokeWidth={1.5} fill="var(--color-pink)" color="var(--color-pink)" />
+                        <Heart size={28} strokeWidth={1.5} fill="var(--color-pink)" color="var(--color-pink)" />
 
                         {/* Heart 2s Hover Easter Egg Particle Burst */}
                         <AnimatePresence>
@@ -168,30 +337,68 @@ export default function Hero() {
                             )}
                         </AnimatePresence>
                     </motion.span>
-                </h1>
+                </motion.h2>
 
+                {/* Step 3: "Rashiii" Calligraphy */}
+                <RashiiiCalligraphy />
+
+                {/* Step 4: Subtitle */}
                 <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.75 }}
-                    transition={{ duration: 1.5, delay: 1.4 }}
-                    className="hero-subtitle"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 0.72, y: 0 }}
+                    transition={{ duration: 0.6, delay: 3.0 }}
+                    style={{
+                        fontFamily: "var(--font-handwriting)",
+                        fontSize: '1.05rem',
+                        color: '#b89ce6',
+                        marginBottom: '1.2rem',
+                        marginTop: '1.5rem',
+                    }}
                 >
-                    The day standards were raised.
-                    <motion.span
-                        animate={{ opacity: [0, 1, 0], scale: [0.8, 1.2, 0.8] }}
-                        transition={{ duration: 3, repeat: Infinity, delay: 2 }}
-                        className="hero-sparkle"
-                    >
-                        <Sparkles size={16} strokeWidth={1.5} color="var(--color-accent)" />
-                    </motion.span>
+                    the day you became someone's favourite person.
                 </motion.p>
 
+                {/* Step 5: Pulsing ✦ */}
+                <motion.span
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.8, 1.2, 0.8] }}
+                    transition={{
+                        opacity: { duration: 3, delay: 3.6, repeat: Infinity, ease: "easeInOut" },
+                        scale: { duration: 3, delay: 3.6, repeat: Infinity, ease: "easeInOut" }
+                    }}
+                    style={{
+                        fontSize: '10px',
+                        color: '#b89ce6',
+                        display: 'block',
+                        marginBottom: '2rem',
+                    }}
+                >
+                    ✦
+                </motion.span>
+
+                {/* Animated divider */}
                 <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 40, opacity: 1 }}
-                    transition={{ duration: 1.2, delay: 2, ease: "easeInOut" }}
+                    transition={{ duration: 1.2, delay: 4.2, ease: "easeInOut" }}
                     className="hero-divider-animated"
                 />
+
+                {/* Date as postmark at bottom */}
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.5 }}
+                    transition={{ duration: 1, delay: 4.5 }}
+                    style={{
+                        fontFamily: "var(--font-handwriting)",
+                        fontSize: '0.9rem',
+                        color: '#3e3552',
+                        marginTop: '1.5rem',
+                        letterSpacing: '0.05em',
+                    }}
+                >
+                    17 March
+                </motion.p>
             </motion.div>
 
             {/* V3 Achaa Tap Unlock Easter Egg */}
@@ -239,12 +446,12 @@ export default function Hero() {
                                     />
                                 </svg>
 
-                                <span style={{ fontFamily: 'var(--font-handwriting)', fontSize: '1.4rem', color: 'var(--color-primary)', display: 'block', padding: '12px 0 0 0', textAlign: 'center' }}>
+                                <span style={{ fontFamily: 'var(--font-handwriting)', fontSize: '1.4rem', color: 'var(--color-text)', display: 'block', padding: '12px 0 0 0', textAlign: 'center' }}>
                                     Achaa.
                                 </span>
                             </motion.div>
 
-                            {/* Dissolving Particles at the end of the animation (Starts around 3s) */}
+                            {/* Dissolving Particles */}
                             <motion.div className="achaa-particles" style={{ position: 'absolute', top: '-20px', left: '50%' }}>
                                 {[...Array(12)].map((_, i) => (
                                     <motion.div

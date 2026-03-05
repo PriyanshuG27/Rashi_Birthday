@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
 
 :root {
     --color-base: #f5f2fb;
@@ -10,6 +10,7 @@
     --color-white: #ffffff;
     --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --font-handwriting: 'Caveat', cursive;
     --shadow-soft: 0 4px 24px rgba(62, 53, 82, 0.06);
     --shadow-hover: 0 12px 36px rgba(62, 53, 82, 0.12);
     --shadow-scrapbook: 2px 6px 15px rgba(0, 0, 0, 0.08);
@@ -26,6 +27,7 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    cursor: none !important;
 }
 
 html {

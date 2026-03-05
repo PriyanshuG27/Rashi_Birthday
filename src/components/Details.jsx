@@ -15,6 +15,7 @@ const WORDS = [
         pullStrength: 0.08,
         photo: "/collage_photo_1_1772561726663.png",
         message: "5 distinct meanings. Depending entirely on the tone.",
+        polaroidCaption: "every single time 🥲",
         polaroidTilt: -2,
         ambientColor: "#f5e6c8",
         path: {
@@ -35,6 +36,7 @@ const WORDS = [
         pullStrength: 0.12,
         photo: "/collage_photo_2_1772561749045.png",
         message: "The ultimate shutdown. No further questions.",
+        polaroidCaption: "no further questions.",
         polaroidTilt: 3,
         ambientColor: "#e8e0f7",
         path: {
@@ -55,6 +57,7 @@ const WORDS = [
         pullStrength: -0.10,
         photo: "/collage_photo_3_1772561775503.png",
         message: "Always said with a completely straight face.",
+        polaroidCaption: "said with a straight face",
         polaroidTilt: -4,
         ambientColor: "#f7e8e8",
         microJitter: true,
@@ -76,6 +79,7 @@ const WORDS = [
         pullStrength: 0.20,
         photo: "/collage_photo_1_1772561726663.png",
         message: "The rarest sight. Completely worth waiting for.",
+        polaroidCaption: "the rarest sight ✦",
         polaroidTilt: 2,
         ambientColor: "#fce4f0",
         path: {
@@ -96,6 +100,7 @@ const WORDS = [
         pullStrength: 0.03,
         photo: "/collage_photo_2_1772561749045.png",
         message: "Mid-conversation. No warning. Just gone.",
+        polaroidCaption: "mid-sentence. gone.",
         polaroidTilt: -3,
         ambientColor: "#dde8f5",
         opacityDip: true,
@@ -117,6 +122,7 @@ const WORDS = [
         pullStrength: -0.06,
         photo: "/collage_photo_3_1772561775503.png",
         message: "Personal space. Firmly enforced. Deeply respected.",
+        polaroidCaption: "firmly. always.",
         polaroidTilt: 4,
         ambientColor: "#e8f5ee",
         path: {
@@ -137,6 +143,7 @@ const WORDS = [
         pullStrength: 0,
         photo: "/collage_photo_1_1772561726663.png",
         message: "Still reading? Of course you are.",
+        polaroidCaption: "of course you are.",
         polaroidTilt: 0,
         ambientColor: "#f5f2fb",
         secret: true,
@@ -359,7 +366,6 @@ const FloatingInkWord = React.forwardRef(({ wordData, index, mouseX, mouseY, isB
                 y: springY,
                 willChange: "transform",
                 zIndex: 10,
-                cursor: "pointer",
                 pointerEvents: isBlurred && !isRestored ? "none" : "auto",
                 display: "inline-block",
             }}
@@ -415,7 +421,6 @@ const FloatingInkWord = React.forwardRef(({ wordData, index, mouseX, mouseY, isB
                         fontWeight: 500,
                         fontSize: wordData.fontSize,
                         color: "#3e3552",
-                        cursor: "pointer",
                         userSelect: "none",
                         letterSpacing: "-0.01em",
                         lineHeight: 1,
@@ -711,15 +716,41 @@ function ActiveCard({ chip, phase, originX, originY, sectionRef, onPhaseChange }
                             zIndex: 6,
                         }}
                     />
+
+                    {/* Part 6B: Polaroid Caption */}
+                    {chip.polaroidCaption && (
+                        <p style={{
+                            position: 'absolute',
+                            bottom: 12,
+                            left: 12,
+                            right: 12,
+                            fontFamily: "var(--font-handwriting)",
+                            fontSize: '0.9rem',
+                            color: '#3e3552',
+                            opacity: 0.55,
+                            textAlign: 'center',
+                        }}>
+                            {chip.polaroidCaption}
+                        </p>
+                    )}
                 </motion.div>
             )}
 
             {/* Typewriter Message */}
             {showTyping && (
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    style={{
+                        background: 'rgba(255,255,255,0.82)',
+                        backdropFilter: 'blur(4px)',
+                        WebkitBackdropFilter: 'blur(4px)',
+                        borderRadius: 12,
+                        padding: '14px 24px',
+                        boxShadow: '0 2px 16px rgba(62,53,82,0.08)',
+                        border: '1px solid rgba(184,156,230,0.18)',
+                    }}
                 >
                     <TypewriterText
                         text={chip.message}
@@ -773,6 +804,43 @@ function FloatingPetals({ originX, originY }) {
 }
 
 /* ═════════════════════════════════════════════════════════════
+   FOUND ALL TEXT — character-by-character reveal (Part 6C)
+   ═════════════════════════════════════════════════════════════ */
+function FoundAllText() {
+    const text = "you were always going to find all of them.";
+    const [displayed, setDisplayed] = useState('');
+
+    useEffect(() => {
+        let i = 0;
+        let cancelled = false;
+        const typeNext = () => {
+            if (cancelled || i >= text.length) return;
+            i++;
+            setDisplayed(text.slice(0, i));
+            setTimeout(typeNext, 2000 / text.length);
+        };
+        setTimeout(typeNext, 300);
+        return () => { cancelled = true; };
+    }, []);
+
+    return (
+        <p style={{
+            fontFamily: "'Playfair Display', Georgia, serif",
+            fontStyle: 'italic',
+            fontSize: '2.2rem',
+            color: '#3e3552',
+            textAlign: 'center',
+            maxWidth: 500,
+            lineHeight: 1.3,
+            position: 'relative',
+            zIndex: 2,
+        }}>
+            {displayed}
+        </p>
+    );
+}
+
+/* ═════════════════════════════════════════════════════════════
    MAIN DETAILS COMPONENT
    ═════════════════════════════════════════════════════════════ */
 export default function Details() {
@@ -793,6 +861,12 @@ export default function Details() {
     const [dissolveOrigin, setDissolveOrigin] = useState(null);
     const [showParticles, setShowParticles] = useState(false);
     const [restoreIndex, setRestoreIndex] = useState(-1);
+
+    // Part 6 state
+    const [clickedWords, setClickedWords] = useState(new Set());
+    const [hintVisible, setHintVisible] = useState(true);
+    const [showFoundAll, setShowFoundAll] = useState(false);
+    const foundAllRef = useRef(false);
 
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
@@ -909,6 +983,19 @@ export default function Details() {
             setActiveIndex(index);
             setActiveWord({ ...wordData, originX, originY, index });
             setDissolveOrigin({ x: originX, y: originY });
+
+            // Part 6: Track clicked words
+            setHintVisible(false);
+            setClickedWords(prev => {
+                const next = new Set([...prev, index]);
+                // Check if all 7 found
+                if (next.size === WORDS.length && !foundAllRef.current) {
+                    foundAllRef.current = true;
+                    // Trigger after close
+                    setTimeout(() => setShowFoundAll(true), 2000);
+                }
+                return next;
+            });
 
             if (wordData.secret) {
                 // "Still here." — skip dissolution, go straight to done-like state
@@ -1316,6 +1403,28 @@ export default function Details() {
                 >
                     Memory Garden
                 </h2>
+
+                {/* Part 6A: Click hint */}
+                <AnimatePresence>
+                    {hintVisible && (
+                        <motion.p
+                            initial={{ opacity: 0.6 }}
+                            animate={{ opacity: [0.4, 0.7, 0.4] }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                            style={{
+                                fontFamily: 'var(--font-handwriting)',
+                                fontSize: '0.95rem',
+                                color: '#b89ce6',
+                                textAlign: 'center',
+                                marginTop: '0.5rem',
+                            }}
+                        >
+                            click a word ✦
+                        </motion.p>
+                    )}
+                </AnimatePresence>
+
                 <motion.div
                     initial={{ width: 0 }}
                     whileInView={{ width: 60 }}
@@ -1422,6 +1531,68 @@ export default function Details() {
 
             {/* ───── BOTTOM SPACER ───── */}
             <div style={{ height: "12rem" }} />
+
+            {/* ───── Part 6C: FOUND THEM ALL OVERLAY ───── */}
+            <AnimatePresence>
+                {showFoundAll && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 2 }}
+                        onAnimationComplete={() => {
+                            setTimeout(() => setShowFoundAll(false), 3000);
+                        }}
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            zIndex: 50,
+                            background: 'radial-gradient(ellipse at center, rgba(245,242,251,0.96) 0%, rgba(240,237,251,0.98) 100%)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            pointerEvents: 'none',
+                        }}
+                    >
+                        {/* Watercolor wash ellipses */}
+                        {[0, 1, 2].map(i => (
+                            <motion.div
+                                key={`wash-${i}`}
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 2 + i * 0.5, opacity: 0.08 }}
+                                transition={{ duration: 3, delay: i * 0.3, ease: 'easeOut' }}
+                                style={{
+                                    position: 'absolute',
+                                    width: 200,
+                                    height: 200,
+                                    borderRadius: '50%',
+                                    background: 'rgba(184,156,230,0.08)',
+                                }}
+                            />
+                        ))}
+
+                        {/* Line 1 — character by character */}
+                        <FoundAllText />
+
+                        {/* Line 2 */}
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 2.5, duration: 0.8 }}
+                            style={{
+                                fontFamily: 'var(--font-handwriting)',
+                                fontSize: '1.1rem',
+                                color: '#b89ce6',
+                                marginTop: '1rem',
+                                textAlign: 'center',
+                            }}
+                        >
+                            just like you find the good in everything.
+                        </motion.p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </section>
     );
 }
