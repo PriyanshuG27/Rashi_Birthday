@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /*
@@ -11,6 +11,11 @@ export default function TypewriterText({ text, onComplete }) {
     const [displayedText, setDisplayedText] = useState('');
     const [isTyping, setIsTyping] = useState(true);
     const [showCursor, setShowCursor] = useState(true);
+
+    const onCompleteRef = useRef(onComplete);
+    useEffect(() => {
+        onCompleteRef.current = onComplete;
+    }, [onComplete]);
 
     useEffect(() => {
         if (!text) return;
@@ -41,7 +46,7 @@ export default function TypewriterText({ text, onComplete }) {
                 setTimeout(() => {
                     if (!cancelled) {
                         setShowCursor(false);
-                        onComplete?.();
+                        onCompleteRef.current?.();
                     }
                 }, 600);
             }
@@ -62,8 +67,9 @@ export default function TypewriterText({ text, onComplete }) {
                 fontFamily: "'Playfair Display', Georgia, serif",
                 fontStyle: 'italic',
                 fontSize: '1.05rem',
-                color: '#3e3552',
-                opacity: 0.82,
+                color: '#2a1f3d',
+                opacity: 1,
+                textShadow: '0 1px 0 rgba(255,255,255,0.6)',
                 textAlign: 'center',
                 maxWidth: 280,
                 margin: '16px auto 0',

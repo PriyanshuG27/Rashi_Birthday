@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion, useMotionValue, useSpring, AnimatePresence, useAnimationControls } from 'framer-motion';
+import { motion, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
 import WatercolorReveal from './WatercolorReveal';
 import TypewriterText from './TypewriterText';
 
@@ -258,8 +258,18 @@ function BotanicalSprig({ rotate }) {
    Outer wrapper: magnetic offset (useMotionValue + useSpring)
    Inner wrapper: roaming path (animate keyframes)
    ═════════════════════════════════════════════════════════════ */
-function FloatingInkWord({ wordData, index, mouseX, mouseY, isBlurred, onSelect, isMobile, collisionDim }) {
-    const outerRef = useRef(null);
+const FloatingInkWord = React.forwardRef(({ wordData, index, mouseX, mouseY, isBlurred, onSelect, isMobile, collisionDim, isExiting, isRestored }, externalRef) => {
+    const internalOuterRef = useRef(null);
+
+    const mergedRef = useCallback((el) => {
+        internalOuterRef.current = el;
+        if (typeof externalRef === 'function') {
+            externalRef(el);
+        } else if (externalRef) {
+            externalRef.current = el;
+        }
+    }, [externalRef]);
+
     const jitterX = useMotionValue(0);
 
     // Magnetic offset values
@@ -294,9 +304,10 @@ function FloatingInkWord({ wordData, index, mouseX, mouseY, isBlurred, onSelect,
     // Magnetic cursor pull (disabled on mobile)
     useEffect(() => {
         if (wordData.pullStrength === 0 || isBlurred || isMobile) return;
-        const unsub = mouseX.on("change", () => {
-            if (!outerRef.current) return;
-            const rect = outerRef.current.getBoundingClientRect();
+
+        const updateMagnet = () => {
+            if (!internalOuterRef.current) return;
+            const rect = internalOuterRef.current.getBoundingClientRect();
             const cx = rect.left + rect.width / 2;
             const cy = rect.top + rect.height / 2;
             const dx = mouseX.get() - cx;
@@ -309,9 +320,12 @@ function FloatingInkWord({ wordData, index, mouseX, mouseY, isBlurred, onSelect,
                 magnetX.set(0);
                 magnetY.set(0);
             }
-        });
-        return unsub;
-    }, [wordData.pullStrength, mouseX, mouseY, magnetX, magnetY, isBlurred, isMobile]);
+        };
+
+        const unsub1 = mouseX.on("change", updateMagnet);
+        const unsub2 = mouseY.on("change", updateMagnet);
+        return () => { unsub1(); unsub2(); };
+    }, [wordData.pullStrength, mouseX, mouseY, magnetX, magnetY, isBlurred, isMobile, internalOuterRef]);
 
     // Micro-jitter for "Irritating."
     useEffect(() => {
@@ -336,7 +350,7 @@ function FloatingInkWord({ wordData, index, mouseX, mouseY, isBlurred, onSelect,
     return (
         /* OUTER: magnetic offset */
         <motion.span
-            ref={outerRef}
+            ref={mergedRef}
             onClick={(e) => onSelect(index, e)}
             style={{
                 position: "absolute",
@@ -346,11 +360,18 @@ function FloatingInkWord({ wordData, index, mouseX, mouseY, isBlurred, onSelect,
                 willChange: "transform",
                 zIndex: 10,
                 cursor: "pointer",
-                pointerEvents: isBlurred ? "none" : "auto",
+                pointerEvents: isBlurred && !isRestored ? "none" : "auto",
                 display: "inline-block",
             }}
-            animate={isBlurred ? { filter: "blur(3px)", opacity: 0.15 } : { filter: "blur(0px)", opacity: 1 }}
-            transition={{ filter: { duration: 0.3 }, opacity: { duration: 0.3 } }}
+            animate={
+                isExiting ? { scale: 0, opacity: 0 }
+                    : isBlurred && !isRestored ? { filter: "blur(3px)" }
+                        : { filter: "blur(0px)" }
+            }
+            transition={
+                isExiting ? { duration: 0.25, ease: "easeIn" }
+                    : { filter: { duration: 0.3 } }
+            }
         >
             {/* INNER: roaming path */}
             <motion.span
@@ -379,10 +400,10 @@ function FloatingInkWord({ wordData, index, mouseX, mouseY, isBlurred, onSelect,
                 {/* The ink word */}
                 <motion.span
                     animate={{
-                        opacity: hovered ? 1.0
-                            : isBlurred ? 0.2
-                                : (wordData.opacityDip && !hovered) ? undefined
-                                    : (collisionDim ? wordData.baseOpacity * 0.4 : wordData.baseOpacity),
+                        opacity: isBlurred && !isRestored ? 0.15
+                            : hovered ? 1.0
+                                : collisionDim ? wordData.baseOpacity * 0.4
+                                    : wordData.baseOpacity,
                         textShadow: hovered
                             ? '1px 1.5px 0px rgba(62,53,82,0.2)'
                             : '0.5px 0.8px 0px rgba(62,53,82,0.15)',
@@ -399,7 +420,7 @@ function FloatingInkWord({ wordData, index, mouseX, mouseY, isBlurred, onSelect,
                         letterSpacing: "-0.01em",
                         lineHeight: 1,
                         opacity: isSecret ? wordData.baseOpacity : undefined,
-                        rotate: `${wordData.baseRotate}deg`,
+                        rotate: wordData.baseRotate,
                         whiteSpace: "nowrap",
                         position: "relative",
                         display: "inline-block",
@@ -452,7 +473,7 @@ function FloatingInkWord({ wordData, index, mouseX, mouseY, isBlurred, onSelect,
             </motion.span>
         </motion.span>
     );
-}
+});
 
 /* ═════════════════════════════════════════════════════════════
    DISSOLUTION PARTICLES (16 radial)
@@ -771,6 +792,7 @@ export default function Details() {
     const [phase, setPhase] = useState(null);
     const [dissolveOrigin, setDissolveOrigin] = useState(null);
     const [showParticles, setShowParticles] = useState(false);
+    const [restoreIndex, setRestoreIndex] = useState(-1);
 
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
@@ -918,12 +940,41 @@ export default function Details() {
 
     // Close handler
     const handleClose = useCallback(() => {
-        setActiveWord(null);
-        setActiveIndex(null);
-        setPhase(null);
-        setDissolveOrigin(null);
-        setShowParticles(false);
+        setRestoreIndex(0);
     }, []);
+
+    // Staggered restore
+    useEffect(() => {
+        if (restoreIndex < 0 || restoreIndex >= WORDS.length) return;
+
+        if (restoreIndex === activeIndex) {
+            if (restoreIndex >= WORDS.length - 1) {
+                setActiveWord(null);
+                setActiveIndex(null);
+                setPhase(null);
+                setDissolveOrigin(null);
+                setShowParticles(false);
+                setRestoreIndex(-1);
+            } else {
+                setRestoreIndex(r => r + 1);
+            }
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            if (restoreIndex === WORDS.length - 1) {
+                setActiveWord(null);
+                setActiveIndex(null);
+                setPhase(null);
+                setDissolveOrigin(null);
+                setShowParticles(false);
+                setRestoreIndex(-1);
+            } else {
+                setRestoreIndex(r => r + 1);
+            }
+        }, 80);
+        return () => clearTimeout(timer);
+    }, [restoreIndex, activeIndex]);
 
     const isActive = activeWord !== null;
 
@@ -1281,17 +1332,16 @@ export default function Details() {
             </motion.div>
 
             {/* ───── FLOATING INK WORDS ───── */}
-            {WORDS.map((wordData, i) => (
-                <AnimatePresence key={i}>
-                    {!(isActive && activeWord?.index === i && phase !== 'dissolve') && (
-                        <motion.div
-                            data-word={i}
-                            ref={el => { wordRefs.current[i] = el; }}
-                            style={{ display: "contents" }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            transition={{ duration: 0.25, ease: "easeIn" }}
-                        >
+            {WORDS.map((wordData, i) => {
+                const isExiting = isActive && activeWord?.index === i && phase === 'dissolve';
+                const isGone = isActive && activeWord?.index === i && phase !== 'dissolve';
+
+                return (
+                    <AnimatePresence>
+                        {!isGone && (
                             <FloatingInkWord
+                                key={i}
+                                ref={el => { wordRefs.current[i] = el; }}
                                 wordData={wordData}
                                 index={i}
                                 mouseX={mouseX}
@@ -1300,11 +1350,13 @@ export default function Details() {
                                 onSelect={handleSelect}
                                 isMobile={isMobile}
                                 collisionDim={collisionDims[i]}
+                                isExiting={isExiting}
+                                isRestored={restoreIndex >= 0 && i <= restoreIndex}
                             />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            ))}
+                        )}
+                    </AnimatePresence>
+                );
+            })}
 
             {/* ───── DISSOLUTION PARTICLES (Act 1) ───── */}
             <AnimatePresence>

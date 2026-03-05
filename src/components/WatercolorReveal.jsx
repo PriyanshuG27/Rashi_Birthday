@@ -28,7 +28,6 @@ export default function WatercolorReveal({
     const seed = noiseSeed;
     const filterId = `wc-filter-${seed}`;
     const completedRef = useRef(false);
-    const displacementRef = useRef(null);
     const mainClipRef = useRef(null);
     const bloom1ClipRef = useRef(null);
     const bloom2ClipRef = useRef(null);
@@ -53,18 +52,14 @@ export default function WatercolorReveal({
         const lx = localX;
         const ly = localY;
 
-        // Animate displacement scale via ref (no re-renders)
+        // Animate displacement scale via ID lookup
         const dispAnim = async () => {
             await animateValue(0, 45, 400, (v) => {
-                if (displacementRef.current) {
-                    displacementRef.current.setAttribute('scale', String(v));
-                }
+                document.getElementById(`wc-disp-${seed}`)?.setAttribute('scale', String(v));
             });
             await new Promise(r => setTimeout(r, 500));
             await animateValue(45, 28, 500, (v) => {
-                if (displacementRef.current) {
-                    displacementRef.current.setAttribute('scale', String(v));
-                }
+                document.getElementById(`wc-disp-${seed}`)?.setAttribute('scale', String(v));
             });
         };
         dispAnim();
@@ -176,7 +171,7 @@ export default function WatercolorReveal({
                             result="noise"
                         />
                         <feDisplacementMap
-                            ref={displacementRef}
+                            id={`wc-disp-${seed}`}
                             in="SourceGraphic"
                             in2="noise"
                             scale="0"
@@ -197,8 +192,7 @@ export default function WatercolorReveal({
                     height: wrapperSize,
                     filter: filterActive ? `url(#${filterId})` : 'none',
                     pointerEvents: 'none',
-                    zIndex: 15,
-                    overflow: 'hidden',
+                    zIndex: 25,
                 }}
             >
                 {/* Main circle */}
