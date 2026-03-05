@@ -3,78 +3,175 @@ import { motion, useScroll, useTransform, useMotionValue, useSpring, AnimatePres
 import { Heart } from 'lucide-react';
 
 /* ═════════════════════════════════════════════════════════════
-   RASHIII CALLIGRAPHY SVG DRAWING ANIMATION
+   LETTER TIMING DATA
+   ═════════════════════════════════════════════════════════════ */
+const LETTER_DATA = [
+  { char: 'R', delay: 500,  dur: 380, blur: 5 },
+  { char: 'a', delay: 820,  dur: 280, blur: 3 },
+  { char: 's', delay: 1060, dur: 320, blur: 4 },
+  { char: 'h', delay: 1340, dur: 300, blur: 3 },
+  { char: 'i', delay: 1580, dur: 160, blur: 2 },
+  { char: 'i', delay: 1720, dur: 160, blur: 2 },
+  { char: 'i', delay: 1860, dur: 160, blur: 2 },
+];
+
+/* ═════════════════════════════════════════════════════════════
+   INK LETTER — per-letter clip reveal with blur + pressure
+   ═════════════════════════════════════════════════════════════ */
+function InkLetter({ char, delay, dur, blur }) {
+  const progress = useMotionValue(0);
+
+  const clipPath = useTransform(
+    progress,
+    [0, 1],
+    ['inset(0 100% 0 0)', 'inset(0 0% 0 0)']
+  );
+  const filter = useTransform(
+    progress,
+    [0, 0.35, 1],
+    [`blur(${blur}px)`, `blur(${blur * 0.4}px)`, 'blur(0px)']
+  );
+  const scale = useTransform(
+    progress,
+    [0, 0.25, 0.85, 1],
+    [0.9, 1.05, 1.02, 1]
+  );
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      animate(progress, 1, {
+        duration: dur / 1000,
+        ease: [0.2, 0, 0.3, 1],
+      });
+    }, delay);
+    return () => clearTimeout(t);
+  }, []);
+
+  const sharedStyle = {
+    fontFamily: "'Playfair Display', Georgia, serif",
+    fontStyle: 'italic',
+    fontWeight: 500,
+    fontSize: 'clamp(3.5rem, 8vw, 5.5rem)',
+    letterSpacing: '-0.01em',
+    lineHeight: 1,
+    display: 'inline-block',
+  };
+
+  return (
+    <span style={{ position: 'relative', display: 'inline-block' }}>
+      {/* Ghost — holds space, invisible */}
+      <span style={{ ...sharedStyle, color: 'transparent' }}>
+        {char}
+      </span>
+      {/* Ink layer — clips and blurs in */}
+      <motion.span
+        style={{
+          ...sharedStyle,
+          color: '#3e3552',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          clipPath,
+          filter,
+          scale,
+          transformOrigin: 'left center',
+        }}
+      >
+        {char}
+      </motion.span>
+    </span>
+  );
+}
+
+/* ═════════════════════════════════════════════════════════════
+   INK NIB — moves across the text as letters form
+   ═════════════════════════════════════════════════════════════ */
+function InkNib() {
+  const x = useMotionValue(0);
+  const opacity = useMotionValue(0);
+
+  useEffect(() => {
+    setTimeout(() => {
+      animate(opacity, 1, { duration: 0.15 });
+      animate(x, 100, {
+        duration: 1.56,
+        ease: 'linear',
+      });
+      setTimeout(() => {
+        animate(opacity, 0, { duration: 0.25 });
+      }, 1550);
+    }, 500);
+  }, []);
+
+  return (
+    <motion.div
+      style={{
+        position: 'absolute',
+        top: '12%',
+        left: 0,
+        translateX: useTransform(x, v => `${v}%`),
+        opacity,
+        pointerEvents: 'none',
+        zIndex: 5,
+        display: 'flex',
+        alignItems: 'center',
+      }}
+    >
+      <div style={{
+        width: 5,
+        height: 9,
+        background: 'radial-gradient(ellipse at 35% 25%, rgba(62,53,82,0.55), rgba(184,156,230,0.25))',
+        borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%',
+        transform: 'rotate(-12deg)',
+        filter: 'blur(0.5px)',
+        flexShrink: 0,
+      }} />
+    </motion.div>
+  );
+}
+
+/* ═════════════════════════════════════════════════════════════
+   RASHIII CALLIGRAPHY — per-letter ink formation
    ═════════════════════════════════════════════════════════════ */
 const RashiiiCalligraphy = () => {
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 0' }}>
-            <svg
-                width="100%"
-                height="120"
-                viewBox="0 0 700 120"
-                style={{ overflow: 'visible', display: 'block', maxWidth: '700px' }}
-            >
-                <defs>
-                    <linearGradient id="underlineGrad" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#b89ce6" />
-                        <stop offset="100%" stopColor="rgba(184,156,230,0.15)" />
-                    </linearGradient>
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+    }}>
+      {/* Letter row with nib */}
+      <div style={{
+        position: 'relative',
+        display: 'inline-block',
+        lineHeight: 1.1,
+      }}>
+        <InkNib />
+        {LETTER_DATA.map((l, i) => (
+          <InkLetter key={i} {...l} />
+        ))}
+      </div>
 
-                    {/* Mask determines what part of the text is visible.
-                        By animating a thick path over the text, we perfectly reveal the text
-                        from bottom-to-top, left-to-right authentic handwriting strokes! */}
-                    <mask id="calligraphy-mask">
-                        {/* The zig-zag spine that traces the letters. Increased bounds to ensure R and iii are fully covered. */}
-                        <motion.path
-                            d="M 175 90 L 210 10 L 250 10 L 250 90 L 280 50 L 280 90 L 310 60 L 310 90 L 330 10 L 330 90 L 350 50 L 350 90 L 380 50 L 380 90 L 410 50 L 410 90 L 440 50 L 440 90 L 470 50 L 470 90 L 510 50 L 510 90"
-                            stroke="white"
-                            strokeWidth="60"
-                            fill="none"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 2.2, delay: 0.5, ease: [0.2, 0, 0.2, 1] }}
-                        />
-                        {/* The three dotted i's applied at the very end of the stroke! */}
-                        <motion.circle cx="380" cy="30" r="15" fill="white" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.3, delay: 2.8 }} />
-                        <motion.circle cx="410" cy="30" r="15" fill="white" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.3, delay: 2.9 }} />
-                        <motion.circle cx="440" cy="30" r="15" fill="white" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.3, delay: 3.0 }} />
-                    </mask>
-                </defs>
-
-                <text
-                    x="50%"
-                    y="90"
-                    textAnchor="middle"
-                    fontFamily="'Playfair Display', Georgia, serif"
-                    fontStyle="italic"
-                    fontWeight="500"
-                    fontSize="88"
-                    fill="#3e3552"
-                    mask="url(#calligraphy-mask)"
-                >
-                    Rashiii
-                </text>
-
-                {/* Underline drawn right to left matching text width exactly */}
-                <motion.line
-                    x1="225" y1="104"
-                    x2="475" y2="104"
-                    stroke="url(#underlineGrad)"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{
-                        duration: 0.7,
-                        delay: 3.2,
-                        ease: [0.2, 0, 0.2, 1]
-                    }}
-                />
-            </svg>
-        </div>
-    );
+      {/* Underline draws left to right after all letters settle */}
+      <motion.div
+        initial={{ scaleX: 0, opacity: 0 }}
+        animate={{ scaleX: 1, opacity: 1 }}
+        transition={{
+          duration: 0.75,
+          delay: 2.25,
+          ease: [0.2, 0, 0.2, 1],
+        }}
+        style={{
+          height: 2,
+          width: 'clamp(220px, 40vw, 340px)',
+          background: 'linear-gradient(90deg, #b89ce6, rgba(184,156,230,0.1))',
+          borderRadius: 2,
+          marginTop: 8,
+          transformOrigin: 'left center',
+        }}
+      />
+    </div>
+  );
 };
 
 export default function Hero() {
@@ -137,9 +234,6 @@ export default function Hero() {
         }
     };
 
-    // SVG path for "Rashiii" calligraphy
-    const rashiiiPath = "M 10 45 Q 12 15 25 18 Q 38 21 30 40 Q 22 60 35 55 L 45 30 M 50 20 Q 42 25 45 40 Q 48 55 58 35 Q 62 28 55 20 M 68 20 L 65 55 M 68 35 Q 78 25 82 38 Q 86 50 78 55 M 90 20 L 92 55 M 90 35 Q 95 30 98 35 M 105 20 L 107 55 M 105 35 Q 110 30 113 35 M 120 20 L 122 55 M 120 35 Q 125 30 128 35";
-
     return (
         <section
             ref={containerRef}
@@ -148,7 +242,6 @@ export default function Hero() {
             onClick={handleTapUnlock}
             style={{ overflow: 'hidden', position: 'relative', cursor: isUnlocked ? 'default' : 'pointer' }}
         >
-
             {/* V3 Breathing Glow + Cursor Pull */}
             <motion.div
                 className="hero-glow-interactive"
@@ -170,7 +263,7 @@ export default function Hero() {
                 style={{ x: repelX2, y: repelY2 }}
             />
 
-            {/* Step 1: Section fades in from white */}
+            {/* Section fades in from white */}
             <motion.div
                 initial={{ opacity: 0, backgroundColor: 'rgba(255,255,255,1)' }}
                 animate={{ opacity: 1, backgroundColor: 'rgba(255,255,255,0)' }}
@@ -182,7 +275,7 @@ export default function Hero() {
                 style={{ y: yText, opacity: opacityText }}
                 className="hero-content"
             >
-                {/* Step 2: "Happy Birthday" traces in */}
+                {/* "Happy Birthday" fades in */}
                 <motion.h2
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -240,14 +333,14 @@ export default function Hero() {
                     </motion.span>
                 </motion.h2>
 
-                {/* Step 3: "Rashiii" Calligraphy */}
+                {/* Rashiii calligraphy — per-letter ink formation */}
                 <RashiiiCalligraphy />
 
-                {/* Step 4: Subtitle */}
+                {/* Subtitle */}
                 <motion.p
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 0.72, y: 0 }}
-                    transition={{ duration: 0.6, delay: 3.0 }}
+                    transition={{ duration: 0.6, delay: 3.2 }}
                     style={{
                         fontFamily: "var(--font-handwriting)",
                         fontSize: '1.05rem',
@@ -259,7 +352,7 @@ export default function Hero() {
                     the day you became someone's favourite person.
                 </motion.p>
 
-                {/* Step 5: Pulsing ✦ */}
+                {/* Pulsing ✦ */}
                 <motion.span
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.8, 1.2, 0.8] }}
@@ -285,7 +378,7 @@ export default function Hero() {
                     className="hero-divider-animated"
                 />
 
-                {/* Date as postmark at bottom */}
+                {/* Date as postmark */}
                 <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 0.5 }}
@@ -333,7 +426,6 @@ export default function Hero() {
                                 animate={{ opacity: [0, 1, 1, 0], y: -50, scale: 1 }}
                                 transition={{ duration: 4, ease: "easeOut", times: [0, 0.1, 0.8, 1] }}
                             >
-                                {/* Speech Bubble SVG */}
                                 <svg width="120" height="60" viewBox="0 0 120 60" style={{ position: 'absolute', inset: 0, zIndex: -1, overflow: 'visible' }}>
                                     <motion.path
                                         d="M 10 10 C 10 0, 110 0, 110 10 C 110 40, 70 40, 60 55 C 50 40, 10 40, 10 10 Z"
@@ -346,13 +438,11 @@ export default function Hero() {
                                         transition={{ duration: 1.2, ease: "easeInOut" }}
                                     />
                                 </svg>
-
                                 <span style={{ fontFamily: 'var(--font-handwriting)', fontSize: '1.4rem', color: 'var(--color-text)', display: 'block', padding: '12px 0 0 0', textAlign: 'center' }}>
                                     Achaa.
                                 </span>
                             </motion.div>
 
-                            {/* Dissolving Particles */}
                             <motion.div className="achaa-particles" style={{ position: 'absolute', top: '-20px', left: '50%' }}>
                                 {[...Array(12)].map((_, i) => (
                                     <motion.div
@@ -370,7 +460,6 @@ export default function Hero() {
                                     />
                                 ))}
                             </motion.div>
-
                         </motion.div>
                     </>
                 )}
