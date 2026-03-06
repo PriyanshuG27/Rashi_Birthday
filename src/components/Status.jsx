@@ -1,5 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, useAnimation } from 'framer-motion';
+import { useSound } from '../App';
 
 const RECEIPT_LINES = [
     { text: 'RASHIII & CO.', type: 'header', delay: 0 },
@@ -36,6 +37,33 @@ const RECEIPT_LINES = [
 ];
 
 export default function Status() {
+    const [isPrinted, setIsPrinted] = useState(false);
+    const [isTornOff, setIsTornOff] = useState(false);
+    const [showThanks, setShowThanks] = useState(false);
+    const { playPrint } = useSound();
+
+    // Track if we've already played the sound to prevent double-hits
+    const soundPlayedRef = useRef(false);
+
+    // Drag controls for tear-off
+    const receiptControls = useAnimation();
+
+    const handleDragEnd = (_, info) => {
+        if (isTornOff) return;
+
+        if (info.offset.y > 150 || info.velocity.y > 800) {
+            setIsTornOff(true);
+            receiptControls.start({
+                y: "110vh",
+                opacity: 0,
+                rotate: 5,
+                transition: { duration: 0.5, ease: "easeIn" }
+            }).then(() => {
+                setShowThanks(true);
+            });
+        }
+    };
+
     const renderLine = (item, i) => {
         if (item.type === 'spacer') {
             return <div key={i} style={{ height: '0.8rem' }} />;
@@ -81,8 +109,7 @@ export default function Status() {
             <motion.div
                 key={i}
                 initial={{ opacity: 0, y: -4 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-20px" }}
+                animate={isPrinted ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.2, delay: item.delay }}
                 style={{ ...style, whiteSpace: 'pre', lineHeight: 1.4 }}
             >
@@ -112,38 +139,104 @@ export default function Status() {
                     </svg>
                 </div>
 
-                {/* Receipt Wrapper */}
-                <div style={{
-                    background: '#fffdf9',
-                    padding: '32px 28px 28px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 20px 40px rgba(0,0,0,0.04), inset 0 0 0 1px rgba(0,0,0,0.04)',
-                    position: 'relative',
-                }}>
-                    {/* Torn Edge Top */}
-                    <svg width="100%" height="12"
-                        style={{ position: 'absolute', top: -11, left: 0 }}
-                        viewBox="0 0 320 12" preserveAspectRatio="none">
-                        <path
-                            d="M0,12 C20,4 40,10 60,6 C80,2 100,8 120,4 C140,0 160,8 180,5 C200,2 220,9 240,5 C260,1 280,7 300,4 C310,2 315,6 320,3 L320,12 Z"
-                            fill="#fffdf9"
-                        />
-                    </svg>
+                {/* Printer Slot Wrapper */}
+                <motion.div
+                    onViewportEnter={() => {
+                        if (!soundPlayedRef.current) {
+                            playPrint();
+                            soundPlayedRef.current = true;
+                        }
+                    }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    style={{
+                        position: 'relative',
+                        minHeight: 500, // Enough height for the receipt
+                        paddingTop: 14, // Room for the torn SVG top edge
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                    }}
+                >
+                    {/* The Thank You Message (Revealed after tear-off) */}
+                    {showThanks && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.8 }}
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                paddingTop: 40,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                zIndex: 0,
+                            }}
+                        >
+                            <p style={{ fontFamily: "'Caveat', cursive", fontSize: '1.4rem', color: '#b89ce6', marginBottom: 6 }}>
+                                receipt kept. ✦
+                            </p>
+                            <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontStyle: 'italic', fontSize: '0.85rem', opacity: 0.4, color: '#3e3552' }}>
+                                it really does matter.
+                            </p>
+                        </motion.div>
+                    )}
 
-                    {/* Receipt Content */}
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        {RECEIPT_LINES.map((item, i) => renderLine(item, i))}
-                    </div>
+                    {/* Receipt Wrapper */}
+                    <motion.div
+                        initial={{ y: "-101%" }}
+                        whileInView={{ y: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={{ duration: 0.8, ease: "linear" }}
+                        onAnimationComplete={() => setIsPrinted(true)}
+                        drag={isPrinted && !isTornOff ? "y" : false}
+                        dragConstraints={{ top: 0 }}
+                        dragElastic={{ top: 0.05, bottom: 0 }}
+                        onDragStart={() => { document.body.style.overflow = 'hidden'; }}
+                        onDragEnd={(e, info) => {
+                            document.body.style.overflow = 'auto';
+                            handleDragEnd(e, info);
+                        }}
+                        animate={receiptControls}
+                        style={{
+                            background: '#fffdf9',
+                            padding: '32px 28px 28px',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 20px 40px rgba(0,0,0,0.04), inset 0 0 0 1px rgba(0,0,0,0.04)',
+                            position: 'relative',
+                            width: '100%',
+                            zIndex: 1,
+                            cursor: isPrinted && !isTornOff ? 'grab' : 'default',
+                            display: showThanks ? 'none' : 'block',
+                        }}
+                        whileDrag={{ cursor: 'grabbing' }}
+                    >
+                        {/* Torn Edge Top */}
+                        <svg width="100%" height="12"
+                            style={{ position: 'absolute', top: -11, left: 0 }}
+                            viewBox="0 0 320 12" preserveAspectRatio="none">
+                            <path
+                                d="M0,12 C20,4 40,10 60,6 C80,2 100,8 120,4 C140,0 160,8 180,5 C200,2 220,9 240,5 C260,1 280,7 300,4 C310,2 315,6 320,3 L320,12 Z"
+                                fill="#fffdf9"
+                            />
+                        </svg>
 
-                    {/* Torn Edge Bottom */}
-                    <svg width="100%" height="12"
-                        style={{ position: 'absolute', bottom: -11, left: 0, transform: 'scaleY(-1)' }}
-                        viewBox="0 0 320 12" preserveAspectRatio="none">
-                        <path
-                            d="M0,12 C20,4 40,10 60,6 C80,2 100,8 120,4 C140,0 160,8 180,5 C200,2 220,9 240,5 C260,1 280,7 300,4 C310,2 315,6 320,3 L320,12 Z"
-                            fill="#fffdf9"
-                        />
-                    </svg>
-                </div>
+                        {/* Receipt Content */}
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            {RECEIPT_LINES.map((item, i) => renderLine(item, i))}
+                        </div>
+
+                        {/* Torn Edge Bottom */}
+                        <svg width="100%" height="12"
+                            style={{ position: 'absolute', bottom: -11, left: 0, transform: 'scaleY(-1)' }}
+                            viewBox="0 0 320 12" preserveAspectRatio="none">
+                            <path
+                                d="M0,12 C20,4 40,10 60,6 C80,2 100,8 120,4 C140,0 160,8 180,5 C200,2 220,9 240,5 C260,1 280,7 300,4 C310,2 315,6 320,3 L320,12 Z"
+                                fill="#fffdf9"
+                            />
+                        </svg>
+                    </motion.div>
+                </motion.div>
             </div>
         </section>
     );

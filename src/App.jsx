@@ -25,6 +25,7 @@ const SoundContext = createContext({
   playWordDissolve: () => { },
   playPolaroidSettle: () => { },
   playBirthdayChime: () => { },
+  playPrint: () => { },
 });
 
 export function useSound() {
@@ -252,7 +253,35 @@ function createSoundSystem() {
     } catch (e) { }
   };
 
-  return { playChime, playRustle, playCakeCandles, playEnvelopeHold, playWaxCrack, playEnvelopeSlide, playWordDissolve, playPolaroidSettle, playBirthdayChime };
+  const playPrint = () => {
+    try {
+      const ac = getCtx();
+      const fireBurst = (delay) => {
+        setTimeout(() => {
+          const buf = ac.createBuffer(1, ac.sampleRate * 0.08, ac.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < buf.length; i++) {
+            const env = Math.pow(1 - i / buf.length, 2);
+            data[i] = (Math.random() * 2 - 1) * 0.12 * env;
+          }
+          const src = ac.createBufferSource();
+          src.buffer = buf;
+          const filter = ac.createBiquadFilter();
+          filter.type = 'highpass';
+          filter.frequency.value = 1200;
+
+          src.connect(filter);
+          filter.connect(ac.destination);
+          src.start();
+        }, delay);
+      };
+      fireBurst(0);
+      fireBurst(250);
+      fireBurst(500);
+    } catch (e) { }
+  };
+
+  return { playChime, playRustle, playCakeCandles, playEnvelopeHold, playWaxCrack, playEnvelopeSlide, playWordDissolve, playPolaroidSettle, playBirthdayChime, playPrint };
 }
 
 /* ═══════════════════════════════════════════
@@ -396,6 +425,7 @@ function App() {
     playWordDissolve: () => { if (!isMuted) getSounds().playWordDissolve(); },
     playPolaroidSettle: () => { if (!isMuted) getSounds().playPolaroidSettle(); },
     playBirthdayChime: () => { if (!isMuted) getSounds().playBirthdayChime(); },
+    playPrint: () => { if (!isMuted) getSounds().playPrint(); },
   };
 
   // Scroll idle detection
