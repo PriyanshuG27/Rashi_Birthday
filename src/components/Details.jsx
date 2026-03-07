@@ -13,7 +13,7 @@ const WORDS = [
         baseOpacity: 0.82,
         baseRotate: -1.5,
         decorator: { symbol: "✦", size: "4px", color: "#b89ce6" },
-        pullStrength: 0.08,
+        pullStrength: 0,
         photo: "/collage_photo_1_1772561726663.png",
         message: "5 distinct meanings. Depending entirely on the tone.",
         polaroidCaption: "every single time 🥲",
@@ -34,7 +34,7 @@ const WORDS = [
         baseOpacity: 0.70,
         baseRotate: 0.8,
         decorator: { symbol: "· ·", size: "6px", color: "#b89ce6" },
-        pullStrength: 0.12,
+        pullStrength: 0,
         photo: "/collage_photo_2_1772561749045.png",
         message: "The ultimate shutdown. No further questions.",
         polaroidCaption: "no further questions.",
@@ -55,7 +55,7 @@ const WORDS = [
         baseOpacity: 0.88,
         baseRotate: -0.5,
         decorator: { symbol: "!", size: "0.6rem", color: "#f4b6d2" },
-        pullStrength: -0.10,
+        pullStrength: 0,
         photo: "/collage_photo_3_1772561775503.png",
         message: "Always said with a completely straight face.",
         polaroidCaption: "said with a straight face",
@@ -77,7 +77,7 @@ const WORDS = [
         baseOpacity: 0.65,
         baseRotate: 1.2,
         decorator: { symbol: "♡", size: "10px", color: "#f4b6d2" },
-        pullStrength: 0.20,
+        pullStrength: 0,
         photo: "/collage_photo_1_1772561726663.png",
         message: "The rarest sight. Completely worth waiting for.",
         polaroidCaption: "the rarest sight ✦",
@@ -98,7 +98,7 @@ const WORDS = [
         baseOpacity: 0.78,
         baseRotate: -2.0,
         decorator: { symbol: "~", size: "inherit", color: "#b89ce6" },
-        pullStrength: 0.03,
+        pullStrength: 0,
         photo: "/collage_photo_2_1772561749045.png",
         message: "Mid-conversation. No warning. Just gone.",
         polaroidCaption: "mid-sentence. gone.",
@@ -120,7 +120,7 @@ const WORDS = [
         baseOpacity: 0.55,
         baseRotate: 0.6,
         decorator: { symbol: "—", size: "inherit", color: "#b89ce6" },
-        pullStrength: -0.06,
+        pullStrength: 0,
         photo: "/collage_photo_3_1772561775503.png",
         message: "Personal space. Firmly enforced. Deeply respected.",
         polaroidCaption: "firmly. always.",
@@ -1385,7 +1385,7 @@ export default function Details() {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "-30% 0px" }}
                 transition={{ duration: 0.8, delay: 0.2 }}
                 style={{
                     position: "relative",
@@ -1413,16 +1413,21 @@ export default function Details() {
                 <AnimatePresence>
                     {hintVisible && (
                         <motion.p
-                            initial={{ opacity: 0.6 }}
-                            animate={{ opacity: [0.4, 0.7, 0.4] }}
+                            initial={{ opacity: 0.8 }}
+                            animate={{ opacity: [0.6, 1, 0.6] }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 3, repeat: Infinity }}
+                            transition={{ duration: 2.5, repeat: Infinity }}
                             style={{
                                 fontFamily: 'var(--font-handwriting)',
-                                fontSize: '0.95rem',
-                                color: '#b89ce6',
+                                fontSize: '1.2rem',
+                                color: '#3e3552',
+                                fontWeight: 600,
                                 textAlign: 'center',
-                                marginTop: '0.5rem',
+                                marginTop: '1rem',
+                                background: 'rgba(255,255,255,0.6)',
+                                padding: '4px 12px',
+                                borderRadius: '12px',
+                                display: 'inline-block',
                             }}
                         >
                             click a word ✦
@@ -1433,7 +1438,7 @@ export default function Details() {
                 <motion.div
                     initial={{ width: 0 }}
                     whileInView={{ width: 60 }}
-                    viewport={{ once: true }}
+                    viewport={{ once: true, margin: "-30% 0px" }}
                     transition={{ duration: 0.8, delay: 0.5 }}
                     style={{
                         height: 2,

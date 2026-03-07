@@ -82,7 +82,7 @@ function TypewriterMemory({ text, isVisible }) {
 
 function TimelineCard({ entry, index, isLast, onMeasure }) {
     const cardRef = useRef(null);
-    const isInView = useInView(cardRef, { once: true, margin: "-80px" });
+    const isInView = useInView(cardRef, { once: true, margin: "-30% 0px" });
     const isLeft = index % 2 === 0;
     const rotation = isLeft ? -1.5 : 1.2;
     const tapeRotation = isLeft ? -3 : 2;
@@ -183,7 +183,7 @@ export default function Timeline() {
             <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "-30% 0px" }}
                 transition={{ duration: 0.8 }}
                 style={{
                     textAlign: 'center',
@@ -227,7 +227,7 @@ export default function Timeline() {
                         strokeDasharray="6 10"
                         initial={{ pathLength: 0 }}
                         whileInView={{ pathLength: 1 }}
-                        viewport={{ once: true }}
+                        viewport={{ once: true, margin: "-30% 0px" }}
                         transition={{ duration: 2.0, ease: "easeInOut" }}
                     />
                 </svg>
@@ -242,7 +242,7 @@ export default function Timeline() {
                             key={`marker-${i}`}
                             initial={{ opacity: 0, scale: 0 }}
                             whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true, margin: "-80px" }}
+                            viewport={{ once: true, margin: "-30% 0px" }}
                             transition={{ delay: 0.4, type: 'spring', stiffness: 300, damping: 15 }}
                             style={{
                                 position: 'absolute',

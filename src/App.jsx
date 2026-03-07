@@ -3,11 +3,12 @@ import './App.css';
 
 import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 // Feature Components
+import ScrollVine from './components/ScrollVine';
 import Hero from './components/Hero';
-import Profile from './components/Profile';
 import Timeline from './components/Timeline';
 import Details from './components/Details';
 import Letter from './components/Letter';
+import RadarChart from './components/RadarChart';
 import Status from './components/Status';
 import Final from './components/Final';
 
@@ -38,6 +39,9 @@ function createSoundSystem() {
   const getCtx = () => {
     if (!ctx) {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (ctx.state === 'suspended') {
+      ctx.resume();
     }
     return ctx;
   };
@@ -428,6 +432,8 @@ function App() {
     playPrint: () => { if (!isMuted) getSounds().playPrint(); },
   };
 
+
+
   // Scroll idle detection
   useEffect(() => {
     let idleTimer;
@@ -463,6 +469,9 @@ function App() {
 
         {/* Custom Cursor */}
         <CustomCursor />
+
+        {/* Scroll Botanicals */}
+        <ScrollVine />
 
         {/* GLOBAL FLORAL LAYERS */}
         <div className="global-floral-layer far-bg">
@@ -522,13 +531,13 @@ function App() {
         <div className="content-layers-wrapper">
           <Hero />
           <div className="spacer-wave" />
-          <Profile />
-          <div className="spacer-wave" />
           <Timeline />
           <div className="spacer-wave" />
-          <Details />
-          <div className="spacer-wave" />
           <Letter />
+          <div className="spacer-wave" />
+          <RadarChart />
+          <div className="spacer-wave" />
+          <Details />
           <div className="spacer-wave" />
           <Status />
           <div className="spacer-wave" />

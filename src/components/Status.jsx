@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, useAnimation } from 'framer-motion';
+import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { useSound } from '../App';
 
 const RECEIPT_LINES = [
@@ -39,6 +39,7 @@ const RECEIPT_LINES = [
 export default function Status() {
     const [isPrinted, setIsPrinted] = useState(false);
     const [isTornOff, setIsTornOff] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     const [showThanks, setShowThanks] = useState(false);
     const { playPrint } = useSound();
 
@@ -147,7 +148,7 @@ export default function Status() {
                             soundPlayedRef.current = true;
                         }
                     }}
-                    viewport={{ once: true, margin: "-100px" }}
+                    viewport={{ once: true, margin: "-300px" }}
                     style={{
                         position: 'relative',
                         minHeight: 500, // Enough height for the receipt
@@ -187,15 +188,19 @@ export default function Status() {
                     <motion.div
                         initial={{ y: "-101%" }}
                         whileInView={{ y: 0 }}
-                        viewport={{ once: true, margin: "-100px" }}
+                        viewport={{ once: true, margin: "-300px" }}
                         transition={{ duration: 0.8, ease: "linear" }}
                         onAnimationComplete={() => setIsPrinted(true)}
                         drag={isPrinted && !isTornOff ? "y" : false}
                         dragConstraints={{ top: 0 }}
                         dragElastic={{ top: 0.05, bottom: 0 }}
-                        onDragStart={() => { document.body.style.overflow = 'hidden'; }}
+                        onDragStart={() => {
+                            document.body.style.overflow = 'hidden';
+                            setIsDragging(true);
+                        }}
                         onDragEnd={(e, info) => {
                             document.body.style.overflow = 'auto';
+                            setIsDragging(false);
                             handleDragEnd(e, info);
                         }}
                         animate={receiptControls}
@@ -224,6 +229,33 @@ export default function Status() {
                         {/* Receipt Content */}
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             {RECEIPT_LINES.map((item, i) => renderLine(item, i))}
+
+                            {/* Tear Indicator */}
+                            <AnimatePresence>
+                                {isPrinted && !isDragging && !isTornOff && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.4, delay: 0.3 }}
+                                        style={{
+                                            marginTop: '1.5rem',
+                                            borderTop: '1px dashed rgba(62,53,82,0.15)',
+                                            paddingTop: '8px',
+                                            textAlign: 'center',
+                                        }}
+                                    >
+                                        <span style={{
+                                            fontFamily: "'Caveat', cursive",
+                                            fontSize: '0.8rem',
+                                            color: '#b89ce6',
+                                            opacity: 0.5,
+                                        }}>
+                                            ↓ drag to tear
+                                        </span>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
 
                         {/* Torn Edge Bottom */}

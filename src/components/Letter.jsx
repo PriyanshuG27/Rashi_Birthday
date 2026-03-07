@@ -523,14 +523,14 @@ export default function Letter() {
                         {/* Polaroid Photo */}
                         {!isMobile && (
                             <motion.div
-                                initial={{ opacity: 0, y: -40, rotate: -8, x: 20 }}
-                                animate={{ opacity: 1, y: 0, rotate: -4, x: 0 }}
+                                initial={{ opacity: 0, y: -40, rotate: 8, x: -20 }}
+                                animate={{ opacity: 1, y: 0, rotate: 4, x: 0 }}
                                 transition={{ delay: 0.8, type: 'spring', stiffness: 100, damping: 12 }}
-                                whileHover={{ y: -6, rotate: -3, boxShadow: '4px 12px 28px rgba(0,0,0,0.18)' }}
+                                whileHover={{ y: -6, rotate: 5, boxShadow: '4px 12px 28px rgba(0,0,0,0.18)' }}
                                 style={{
                                     position: 'absolute',
                                     top: -30,
-                                    right: -20,
+                                    left: -20,
                                     width: 160,
                                     background: '#fff',
                                     padding: '8px 8px 36px 8px',

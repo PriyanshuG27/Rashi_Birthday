@@ -20,13 +20,13 @@ export default function Final() {
     const [heartHoverStart, setHeartHoverStart] = useState(null);
 
     // Cake Interaction States
-    const [micStatus, setMicStatus] = useState('prompt'); // 'prompt' | 'listening' | 'denied'
+    const [micStatus, setMicStatus] = useState('initial'); // 'initial' | 'prompt' | 'listening' | 'denied'
     const [phase, setPhase] = useState(0); // 0: idle, 1: flames out, 2: explode, 3: fade
     const audioContextRef = useRef(null);
     const analyserRef = useRef(null);
     const reqFrameRef = useRef(null);
 
-    const BLOW_THRESHOLD = 0.08;
+    const BLOW_THRESHOLD = 0.04;
 
     const handleSequence = () => {
         setStage(1);
@@ -62,14 +62,33 @@ export default function Final() {
     // Mic Detection Logic
     useEffect(() => {
         if (stage > 0) return;
+        return () => {
+            if (reqFrameRef.current) cancelAnimationFrame(reqFrameRef.current);
+            if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+                audioContextRef.current.close().catch(() => { });
+            }
+        };
+    }, [stage]);
+
+    // Mic Detection Logic - started on user gesture
+    const startMic = async () => {
         let blowStartTime = null;
 
-        const startMic = async () => {
+        const startListening = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: false,
+                        autoGainControl: false,
+                        noiseSuppression: false
+                    }
+                });
                 setMicStatus('listening');
 
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') {
+                    await audioCtx.resume();
+                }
                 audioContextRef.current = audioCtx;
 
                 const analyser = audioCtx.createAnalyser();
@@ -93,7 +112,7 @@ export default function Final() {
 
                     if (rms > BLOW_THRESHOLD) {
                         if (!blowStartTime) blowStartTime = performance.now();
-                        else if (performance.now() - blowStartTime > 200) {
+                        else if (performance.now() - blowStartTime > 100) {
                             handleBlow();
                             return; // Stop polling
                         }
@@ -110,15 +129,14 @@ export default function Final() {
             }
         };
 
-        startMic();
+        startListening();
+    };
 
-        return () => {
-            if (reqFrameRef.current) cancelAnimationFrame(reqFrameRef.current);
-            if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-                audioContextRef.current.close().catch(() => { });
-            }
-        };
-    }, [stage]);
+    const handleInitialLight = () => {
+        setMicStatus('prompt');
+        try { playBirthdayChime(); } catch (e) { }
+        startMic();
+    };
 
     const handleBlow = () => {
         if (phase > 0) return;
@@ -227,6 +245,28 @@ export default function Final() {
                 <div className="cake-interaction-container" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 1 }}>
                     <AnimatePresence>
                         {phase < 3 && (
+                            <motion.h2
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                transition={{ duration: 0.8 }}
+                                style={{
+                                    fontFamily: "'Playfair Display', Georgia, serif",
+                                    fontStyle: 'italic',
+                                    fontSize: 'clamp(1.5rem, 4vw, 2rem)',
+                                    color: '#3e3552',
+                                    marginBottom: '3.5rem',
+                                    fontWeight: 500,
+                                    textAlign: 'center'
+                                }}
+                            >
+                                Make a wish & blow the candles.
+                            </motion.h2>
+                        )}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                        {phase < 3 && (
                             <motion.div
                                 className="cake-wrapper"
                                 initial={{ opacity: 1, scale: 1 }}
@@ -285,7 +325,28 @@ export default function Final() {
 
                     {phase < 3 && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            {micStatus === 'denied' ? (
+                            {micStatus === 'initial' ? (
+                                <motion.div
+                                    animate={{ opacity: [0.8, 1, 0.8] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                                    style={{
+                                        fontFamily: 'var(--font-handwriting)',
+                                        fontSize: '1.2rem',
+                                        color: '#3e3552',
+                                        marginTop: '2rem',
+                                        cursor: 'pointer',
+                                        position: 'relative',
+                                        zIndex: 10,
+                                        background: 'rgba(255,255,255,0.6)',
+                                        padding: '4px 16px',
+                                        borderRadius: '16px',
+                                        fontWeight: 600
+                                    }}
+                                    onClick={handleInitialLight}
+                                >
+                                    Light the candles ✦
+                                </motion.div>
+                            ) : micStatus === 'denied' ? (
                                 <motion.div
                                     animate={{ opacity: [0.5, 0.8, 0.5] }}
                                     transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
@@ -366,7 +427,7 @@ export default function Final() {
                                     exit={{ opacity: 0, y: -20, filter: "blur(5px)" }}
                                     transition={{ duration: 1, ease: "easeOut" }}
                                 >
-                                    so gyiii 🥲
+                                    Me so gyaaa abhhh 🥲
                                     <motion.div
                                         className="final-zzz"
                                         animate={{ y: [0, -20, -40], x: [0, 10, -5], opacity: [0, 1, 0] }}
