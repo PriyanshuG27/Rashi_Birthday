@@ -19,7 +19,7 @@ export default function Final() {
     const [showEasterEgg, setShowEasterEgg] = useState(false);
     const [heartHoverStart, setHeartHoverStart] = useState(null);
 
-    // Cake Interaction States
+    const [candlesLit, setCandlesLit] = useState(false);
     const [micStatus, setMicStatus] = useState('initial'); // 'initial' | 'prompt' | 'listening' | 'denied'
     const [phase, setPhase] = useState(0); // 0: idle, 1: flames out, 2: explode, 3: fade
     const audioContextRef = useRef(null);
@@ -52,7 +52,7 @@ export default function Final() {
         if (heartHoverStart) {
             timer = setTimeout(() => {
                 setShowEasterEgg(true);
-            }, 3000);
+            }, 1500);
         } else {
             setShowEasterEgg(false);
         }
@@ -76,13 +76,13 @@ export default function Final() {
 
         const startListening = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: false,
-                        autoGainControl: false,
-                        noiseSuppression: false
-                    }
-                });
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    alert('Mic access requires a secure connection (HTTPS) or is unsupported by this browser.');
+                    setMicStatus('denied');
+                    return;
+                }
+
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 setMicStatus('listening');
 
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -92,7 +92,8 @@ export default function Final() {
                 audioContextRef.current = audioCtx;
 
                 const analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 512;
+                analyser.fftSize = 256;
+                analyser.smoothingTimeConstant = 0.4;
                 const source = audioCtx.createMediaStreamSource(stream);
                 source.connect(analyser);
                 analyserRef.current = analyser;
@@ -101,16 +102,15 @@ export default function Final() {
                 const dataArray = new Uint8Array(bufferLength);
 
                 const checkVolume = () => {
-                    analyser.getByteTimeDomainData(dataArray);
+                    analyser.getByteFrequencyData(dataArray);
 
-                    let sumSquares = 0.0;
+                    let sum = 0;
                     for (let i = 0; i < bufferLength; i++) {
-                        const norm = (dataArray[i] / 128.0) - 1.0;
-                        sumSquares += norm * norm;
+                        sum += dataArray[i];
                     }
-                    const rms = Math.sqrt(sumSquares / bufferLength);
+                    const average = sum / bufferLength;
 
-                    if (rms > BLOW_THRESHOLD) {
+                    if (average > 40) {
                         if (!blowStartTime) blowStartTime = performance.now();
                         else if (performance.now() - blowStartTime > 100) {
                             handleBlow();
@@ -125,6 +125,7 @@ export default function Final() {
 
                 reqFrameRef.current = requestAnimationFrame(checkVolume);
             } catch (err) {
+                alert('Mic access denied or failed: ' + err.message);
                 setMicStatus('denied');
             }
         };
@@ -133,6 +134,7 @@ export default function Final() {
     };
 
     const handleInitialLight = () => {
+        setCandlesLit(true);
         setMicStatus('prompt');
         try { playBirthdayChime(); } catch (e) { }
         startMic();
@@ -244,7 +246,7 @@ export default function Final() {
             {stage === 0 && (
                 <div className="cake-interaction-container" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 1 }}>
                     <AnimatePresence>
-                        {phase < 3 && (
+                        {phase < 3 && candlesLit && (
                             <motion.h2
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -280,7 +282,7 @@ export default function Final() {
                                     {[...Array(3)].map((_, i) => (
                                         <div key={i} style={{ position: 'relative', width: 8, height: 28, background: i % 2 === 0 ? '#b89ce6' : '#f4b6d2', borderRadius: 3 }}>
                                             <AnimatePresence>
-                                                {phase === 0 && (
+                                                {phase === 0 && candlesLit && (
                                                     <motion.div
                                                         initial={{ scale: 0.9, rotate: -3 }}
                                                         animate={{ scale: [0.9, 1.1, 0.9], rotate: [-3, 3, -3] }}

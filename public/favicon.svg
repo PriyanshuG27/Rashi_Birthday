@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Lavender flower favicon -->
+  <g transform="translate(16,16)">
+    <!-- Petals -->
+    <ellipse cx="0" cy="-7" rx="4" ry="7" fill="#b89ce6" opacity="0.9"/>
+    <ellipse cx="0" cy="-7" rx="4" ry="7" fill="#b89ce6" opacity="0.9" transform="rotate(72)"/>
+    <ellipse cx="0" cy="-7" rx="4" ry="7" fill="#b89ce6" opacity="0.9" transform="rotate(144)"/>
+    <ellipse cx="0" cy="-7" rx="4" ry="7" fill="#b89ce6" opacity="0.9" transform="rotate(216)"/>
+    <ellipse cx="0" cy="-7" rx="4" ry="7" fill="#b89ce6" opacity="0.9" transform="rotate(288)"/>
+    <!-- Center -->
+    <circle cx="0" cy="0" r="3" fill="#f5f2fb"/>
+  </g>
+</svg>

@@ -362,9 +362,15 @@ const FloatingInkWord = React.forwardRef(({ wordData, index, mouseX, mouseY, isB
             onClick={(e) => onSelect(index, e)}
             style={{
                 position: "absolute",
-                ...wordData.position,
-                x: springX,
-                y: springY,
+                ...(isMobile ? {
+                    top: `${8 + index * 11}%`,
+                    left: '50%',
+                    x: '-50%',
+                } : {
+                    ...wordData.position,
+                    x: springX,
+                    y: springY,
+                }),
                 willChange: "transform",
                 zIndex: 10,
                 pointerEvents: isBlurred && !isRestored ? "none" : "auto",
@@ -420,7 +426,9 @@ const FloatingInkWord = React.forwardRef(({ wordData, index, mouseX, mouseY, isB
                         fontFamily: "'Playfair Display', Georgia, serif",
                         fontStyle: "italic",
                         fontWeight: 500,
-                        fontSize: wordData.fontSize,
+                        fontSize: isMobile
+                            ? `calc(${wordData.fontSize} * 0.82)`
+                            : wordData.fontSize,
                         color: "#3e3552",
                         userSelect: "none",
                         letterSpacing: "-0.01em",
@@ -1456,7 +1464,7 @@ export default function Details() {
                 const isGone = isActive && activeWord?.index === i && phase !== 'dissolve';
 
                 return (
-                    <AnimatePresence>
+                    <AnimatePresence key={i}>
                         {!isGone && (
                             <FloatingInkWord
                                 key={i}

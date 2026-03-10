@@ -11,6 +11,7 @@ import Letter from './components/Letter';
 import RadarChart from './components/RadarChart';
 import Status from './components/Status';
 import Final from './components/Final';
+import Gate from './components/Gate';
 
 /* ═══════════════════════════════════════════
    SOUND CONTEXT (Part 10)
@@ -364,7 +365,7 @@ function CustomCursor() {
           border: isPointer ? '1.5px solid #b89ce6' : 'none',
           opacity: 0.85,
           pointerEvents: 'none',
-          zIndex: 9998,
+          zIndex: 10001,
           transform: 'translate(-50%, -50%)',
           transition: 'width 0.15s, height 0.15s, background 0.15s, border 0.15s',
         }}
@@ -391,7 +392,7 @@ function CustomCursor() {
               borderRadius: '50%',
               background: '#b89ce6',
               pointerEvents: 'none',
-              zIndex: 9998,
+              zIndex: 10001,
               transform: 'translate(-50%, -50%)',
             }}
           />
@@ -432,7 +433,11 @@ function App() {
     playPrint: () => { if (!isMuted) getSounds().playPrint(); },
   };
 
+  const [gatePassed, setGatePassed] = useState(false);
 
+  const handleGatePass = useCallback(() => {
+    setGatePassed(true);
+  }, []);
 
   // Scroll idle detection
   useEffect(() => {
@@ -463,114 +468,119 @@ function App() {
     ["#f5f2fb", "#f8f4fb", "#fcf5f7"]
   );
 
+  const bloom1Y = useTransform(scrollYProgress, [0, 1], [0, -150]);
+  const bloom2Y = useTransform(scrollYProgress, [0, 1], [0, -300]);
+
   return (
     <SoundContext.Provider value={soundApi}>
-      <motion.div className="app-container" style={{ backgroundColor: bgColor }}>
+      <CustomCursor />
+      {!gatePassed ? (
+        <Gate onPass={handleGatePass} />
+      ) : (
+        <motion.div className="app-container" style={{ backgroundColor: bgColor }}>
 
-        {/* Custom Cursor */}
-        <CustomCursor />
+          {/* Scroll Botanicals */}
+          <ScrollVine />
 
-        {/* Scroll Botanicals */}
-        <ScrollVine />
+          {/* GLOBAL FLORAL LAYERS */}
+          <div className="global-floral-layer far-bg">
+            <img src="/lavender_branch.png" className="floral-sprig sprig-1" alt="" />
+            <img src="/lavender_branch.png" className="floral-sprig sprig-2" alt="" />
+            <img src="/lavender_branch.png" className="floral-sprig sprig-3" alt="" />
+          </div>
 
-        {/* GLOBAL FLORAL LAYERS */}
-        <div className="global-floral-layer far-bg">
-          <img src="/lavender_branch.png" className="floral-sprig sprig-1" alt="" />
-          <img src="/lavender_branch.png" className="floral-sprig sprig-2" alt="" />
-          <img src="/lavender_branch.png" className="floral-sprig sprig-3" alt="" />
-        </div>
+          <div className="global-floral-layer mid-depth">
+            <motion.img
+              src="/lavender_flower.png"
+              className="floral-bloom bloom-1"
+              style={{ y: bloom1Y }}
+              alt=""
+            />
+            <motion.img
+              src="/lavender_flower.png"
+              className="floral-bloom bloom-2"
+              style={{ y: bloom2Y }}
+              alt=""
+            />
+          </div>
 
-        <div className="global-floral-layer mid-depth">
-          <motion.img
-            src="/lavender_flower.png"
-            className="floral-bloom bloom-1"
-            style={{ y: useTransform(scrollYProgress, [0, 1], [0, -150]) }}
-            alt=""
-          />
-          <motion.img
-            src="/lavender_flower.png"
-            className="floral-bloom bloom-2"
-            style={{ y: useTransform(scrollYProgress, [0, 1], [0, -300]) }}
-            alt=""
-          />
-        </div>
+          {/* Foreground Idle Particles */}
+          <AnimatePresence>
+            {showIdleParticles && (
+              <motion.div
+                className="idle-particles-container"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="idle-particle"
+                    initial={{ y: '100vh', x: `${Math.random() * 100}vw`, opacity: 0 }}
+                    animate={{
+                      y: '-20vh',
+                      x: `${Math.random() * 100}vw`,
+                      opacity: [0, 0.6, 0],
+                      rotate: Math.random() * 360
+                    }}
+                    transition={{
+                      duration: 4 + Math.random() * 3,
+                      ease: "easeOut",
+                      delay: Math.random() * 0.8
+                    }}
+                  >
+                    ✿
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {/* Foreground Idle Particles */}
-        <AnimatePresence>
-          {showIdleParticles && (
-            <motion.div
-              className="idle-particles-container"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {[...Array(8)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="idle-particle"
-                  initial={{ y: '100vh', x: `${Math.random() * 100}vw`, opacity: 0 }}
-                  animate={{
-                    y: '-20vh',
-                    x: `${Math.random() * 100}vw`,
-                    opacity: [0, 0.6, 0],
-                    rotate: Math.random() * 360
-                  }}
-                  transition={{
-                    duration: 4 + Math.random() * 3,
-                    ease: "easeOut",
-                    delay: Math.random() * 0.8
-                  }}
-                >
-                  ✿
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+          <div className="content-layers-wrapper">
+            <Hero />
+            <div className="spacer-wave" />
+            <Timeline />
+            <div className="spacer-wave" />
+            <Letter />
+            <div className="spacer-wave" />
+            <RadarChart />
+            <div className="spacer-wave" />
+            <Details />
+            <div className="spacer-wave" />
+            <Status />
+            <div className="spacer-wave" />
+            <Final />
+          </div>
 
-        <div className="content-layers-wrapper">
-          <Hero />
-          <div className="spacer-wave" />
-          <Timeline />
-          <div className="spacer-wave" />
-          <Letter />
-          <div className="spacer-wave" />
-          <RadarChart />
-          <div className="spacer-wave" />
-          <Details />
-          <div className="spacer-wave" />
-          <Status />
-          <div className="spacer-wave" />
-          <Final />
-        </div>
-
-        {/* Sound Toggle (Part 10) */}
-        <button
-          onClick={() => setIsMuted(m => !m)}
-          style={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            zIndex: 999,
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.7)',
-            border: '1px solid rgba(184,156,230,0.3)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '16px',
-            cursor: 'pointer',
-            transition: 'transform 0.2s',
-          }}
-          title={isMuted ? "Unmute sounds" : "Mute sounds"}
-        >
-          {isMuted ? '🔇' : '🔊'}
-        </button>
-      </motion.div>
+          {/* Sound Toggle (Part 10) */}
+          <button
+            onClick={() => setIsMuted(m => !m)}
+            style={{
+              position: 'fixed',
+              bottom: 24,
+              right: 24,
+              zIndex: 999,
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.7)',
+              border: '1px solid rgba(184,156,230,0.3)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px',
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+            }}
+            title={isMuted ? "Unmute sounds" : "Mute sounds"}
+          >
+            {isMuted ? '🔇' : '🔊'}
+          </button>
+        </motion.div>
+      )}
     </SoundContext.Provider>
   );
 }

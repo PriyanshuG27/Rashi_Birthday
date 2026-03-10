@@ -234,10 +234,10 @@ export default function Status() {
                             <AnimatePresence>
                                 {isPrinted && !isDragging && !isTornOff && (
                                     <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
+                                        initial={{ opacity: 0, y: -4 }}
+                                        animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.4, delay: 0.3 }}
+                                        transition={{ duration: 0.4, delay: 0.5 }}
                                         style={{
                                             marginTop: '1.5rem',
                                             borderTop: '1px dashed rgba(62,53,82,0.15)',
@@ -245,14 +245,24 @@ export default function Status() {
                                             textAlign: 'center',
                                         }}
                                     >
-                                        <span style={{
-                                            fontFamily: "'Caveat', cursive",
-                                            fontSize: '0.8rem',
-                                            color: '#b89ce6',
-                                            opacity: 0.5,
-                                        }}>
+                                        <motion.span
+                                            animate={{ y: [0, 4, 0] }}
+                                            transition={{
+                                                duration: 1.8,
+                                                repeat: Infinity,
+                                                ease: "easeInOut",
+                                                delay: 0.8
+                                            }}
+                                            style={{
+                                                display: 'inline-block',
+                                                fontFamily: "'Caveat', cursive",
+                                                fontSize: '0.8rem',
+                                                color: '#b89ce6',
+                                                opacity: 0.5,
+                                            }}
+                                        >
                                             ↓ drag to tear
-                                        </span>
+                                        </motion.span>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
