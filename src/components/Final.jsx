@@ -508,6 +508,26 @@ export default function Final() {
                                         />
                                     </motion.div>
 
+                                    {/* Plain moment — no decoration */}
+                                    <motion.p
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 1, delay: 2.0 }}
+                                        style={{
+                                            fontFamily: "'Inter', system-ui, sans-serif",
+                                            fontStyle: 'normal',
+                                            fontWeight: 400,
+                                            fontSize: '0.9rem',
+                                            color: '#3e3552',
+                                            opacity: 0.55,
+                                            textAlign: 'center',
+                                            marginBottom: '1.8rem',
+                                            letterSpacing: 0,
+                                        }}
+                                    >
+                                        I just wanted you to know that I notice.
+                                    </motion.p>
+
                                     {/* Line 3 */}
                                     <motion.div
                                         initial={{ opacity: 0 }}
@@ -641,7 +661,7 @@ export default function Final() {
                                             zIndex: 10,
                                         }}
                                     >
-                                        made with too many browser tabs and not enough sleep. worth it. ✦
+                                        I know you're already planning what to say about this being too much. it was. you deserved it anyway. ✦
                                     </motion.p>
 
                                     {/* Quiet escape — appears late */}

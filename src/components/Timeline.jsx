@@ -20,7 +20,7 @@ const ENTRIES = [
     {
         year: "the hard part",
         label: "fights. mistakes. distance.",
-        memory: "she stayed anyway. that says everything.",
+        memory: "she said 'irritating.' and meant it. she stayed and meant that more.",
     },
     {
         year: "now",

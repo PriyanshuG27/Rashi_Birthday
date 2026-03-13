@@ -44,6 +44,7 @@ export default function Gate({ onPass }) {
     const [isFocused, setIsFocused] = useState(false);
     const [isShaking, setIsShaking] = useState(false);
     const [isErrorFlash, setIsErrorFlash] = useState(false);
+    const [showCorrect, setShowCorrect] = useState(false);
 
     const [hasArrived, setHasArrived] = useState(false);
     const [typedMessage, setTypedMessage] = useState('');
@@ -120,6 +121,7 @@ export default function Gate({ onPass }) {
         if (isExit) {
             let charTimer;
             if (gateState === 'correct') {
+                setShowCorrect(true);
                 playChime();
                 const len = inputValue.length || 10;
                 let i = 0;
@@ -135,7 +137,7 @@ export default function Gate({ onPass }) {
 
             const unmountTimer = setTimeout(() => {
                 onPassRef.current();
-            }, 800);
+            }, 2600);
 
             return () => {
                 clearTimeout(charTimer);
@@ -174,7 +176,7 @@ export default function Gate({ onPass }) {
         ? { y: -40, opacity: 0, filter: "blur(8px)" }
         : (hasArrived ? { y: [0, -4, 0], opacity: 1 } : { y: 0, opacity: 1 });
     const cardTransition = isExit
-        ? { duration: 0.8, delay: 0.3 }
+        ? { duration: 0.7, delay: 1.6 }
         : (hasArrived
             ? { duration: 6, repeat: Infinity, ease: "easeInOut" }
             : { type: "spring", stiffness: 60, damping: 14, delay: 0.4 });
@@ -190,7 +192,7 @@ export default function Gate({ onPass }) {
         <motion.div
             initial={{ opacity: 0 }}
             animate={isExit ? { opacity: 0 } : { opacity: 1 }}
-            transition={isExit ? { duration: 0.1, delay: 0.7 } : { duration: 0.6 }}
+            transition={isExit ? { duration: 0.3, delay: 2.2 } : { duration: 0.6 }}
             style={{
                 position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: '#f5f2fb',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
@@ -366,8 +368,6 @@ export default function Gate({ onPass }) {
                             </AnimatePresence>
                         </form>
                     </motion.div>
-
-                    {/* Hint */}
                     <AnimatePresence>
                         {wrongCount >= 2 && !isExit && (
                             <motion.div
@@ -405,6 +405,72 @@ export default function Gate({ onPass }) {
                         >
                             skip →
                         </motion.button>
+                    )}
+                </AnimatePresence>
+                {/* Correct answer overlay — appears over entire card */}
+                <AnimatePresence>
+                    {showCorrect && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.35 }}
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                borderRadius: 4,
+                                background: 'rgba(255,253,249,0.92)',
+                                backdropFilter: 'blur(4px)',
+                                WebkitBackdropFilter: 'blur(4px)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 14,
+                                zIndex: 20,
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            <motion.p
+                                initial={{ opacity: 0, y: 18, scale: 0.94 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 0.61, 0.36, 1] }}
+                                style={{
+                                    fontFamily: "'Playfair Display', serif",
+                                    fontStyle: 'italic',
+                                    fontWeight: 500,
+                                    fontSize: 'clamp(1.6rem, 4vw, 2rem)',
+                                    color: '#3e3552',
+                                    letterSpacing: '-0.02em',
+                                    textAlign: 'center',
+                                    margin: 0,
+                                }}
+                            >
+                                of course you knew.
+                            </motion.p>
+                            <motion.div
+                                initial={{ scaleX: 0, opacity: 0 }}
+                                animate={{ scaleX: 1, opacity: 1 }}
+                                transition={{ duration: 0.5, delay: 0.35 }}
+                                style={{
+                                    height: 1,
+                                    width: 80,
+                                    background: 'linear-gradient(90deg, transparent, #b89ce6, transparent)',
+                                }}
+                            />
+                            <motion.span
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 0.4 }}
+                                transition={{ duration: 0.4, delay: 0.55 }}
+                                style={{
+                                    fontFamily: "'Caveat', cursive",
+                                    fontSize: '1rem',
+                                    color: '#b89ce6',
+                                }}
+                            >
+                                ✦
+                            </motion.span>
+                        </motion.div>
                     )}
                 </AnimatePresence>
             </motion.div>
