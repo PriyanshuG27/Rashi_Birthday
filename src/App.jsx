@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback, createContext, useContext } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo, createContext, useContext } from 'react';
 import './App.css';
 
 import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
@@ -419,7 +419,7 @@ function App() {
     return soundSystemRef.current;
   }, []);
 
-  const soundApi = {
+  const soundApi = useMemo(() => ({
     isMuted,
     playChime: () => { if (!isMuted) getSounds().playChime(); },
     playRustle: () => { if (!isMuted) getSounds().playRustle(); },
@@ -431,7 +431,7 @@ function App() {
     playPolaroidSettle: () => { if (!isMuted) getSounds().playPolaroidSettle(); },
     playBirthdayChime: () => { if (!isMuted) getSounds().playBirthdayChime(); },
     playPrint: () => { if (!isMuted) getSounds().playPrint(); },
-  };
+  }), [isMuted, getSounds]);
 
   const [gatePassed, setGatePassed] = useState(false);
 
@@ -553,18 +553,54 @@ function App() {
             <Final />
           </div>
 
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: "0px" }}
+            transition={{ duration: 2 }}
+            style={{
+              textAlign: 'center',
+              padding: '2rem 1rem 5rem',
+            }}
+          >
+            <p style={{
+              fontFamily: "'Caveat', cursive",
+              fontSize: '0.8rem',
+              color: '#b89ce6',
+              opacity: 0.3,
+              letterSpacing: '0.05em',
+            }}>
+              still reading? of course you are. hi. ✦
+            </p>
+          </motion.div>
+
           {/* Sound Toggle (Part 10) */}
-          <button
+          <motion.button
             onClick={() => setIsMuted(m => !m)}
+            initial={{ scale: 1 }}
+            animate={isMuted ? {
+              scale: [1, 1.15, 1],
+              boxShadow: [
+                '0 0 0 0 rgba(184,156,230,0)',
+                '0 0 0 6px rgba(184,156,230,0.25)',
+                '0 0 0 0 rgba(184,156,230,0)',
+              ]
+            } : { scale: 1 }}
+            transition={{
+              delay: 3,
+              duration: 1.2,
+              repeat: 2,
+              repeatDelay: 4,
+            }}
             style={{
               position: 'fixed',
               bottom: 24,
               right: 24,
               zIndex: 999,
-              width: 32,
-              height: 32,
+              width: 36,
+              height: 36,
               borderRadius: '50%',
-              background: 'rgba(255,255,255,0.7)',
+              background: 'rgba(255,255,255,0.85)',
               border: '1px solid rgba(184,156,230,0.3)',
               backdropFilter: 'blur(8px)',
               WebkitBackdropFilter: 'blur(8px)',
@@ -572,13 +608,13 @@ function App() {
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '16px',
-              cursor: 'pointer',
+              cursor: 'none',
               transition: 'transform 0.2s',
             }}
             title={isMuted ? "Unmute sounds" : "Mute sounds"}
           >
             {isMuted ? '🔇' : '🔊'}
-          </button>
+          </motion.button>
         </motion.div>
       )}
     </SoundContext.Provider>

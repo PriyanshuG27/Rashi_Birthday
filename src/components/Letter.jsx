@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform, AnimatePresence, useInView } from 'fra
 import { Heart, Sparkles } from 'lucide-react';
 import { useSound } from '../App';
 
-const LETTER_PHOTO = '/collage_photo_1_1772561726663.png';
+const LETTER_PHOTO = '/photo_letter.png';
 
 /* ═══════════════════════════════════════════
    CASSETTE TAPE SVG (Part 7)

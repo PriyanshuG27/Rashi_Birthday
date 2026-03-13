@@ -14,7 +14,7 @@ const WORDS = [
         baseRotate: -1.5,
         decorator: { symbol: "✦", size: "4px", color: "#b89ce6" },
         pullStrength: 0,
-        photo: "/collage_photo_1_1772561726663.png",
+        photo: "/photo_achaa.png",
         message: "5 distinct meanings. Depending entirely on the tone.",
         polaroidCaption: "every single time 🥲",
         polaroidTilt: -2,
@@ -35,7 +35,7 @@ const WORDS = [
         baseRotate: 0.8,
         decorator: { symbol: "· ·", size: "6px", color: "#b89ce6" },
         pullStrength: 0,
-        photo: "/collage_photo_2_1772561749045.png",
+        photo: "/photo_aye_bade.png",
         message: "The ultimate shutdown. No further questions.",
         polaroidCaption: "no further questions.",
         polaroidTilt: 3,
@@ -56,7 +56,7 @@ const WORDS = [
         baseRotate: -0.5,
         decorator: { symbol: "!", size: "0.6rem", color: "#f4b6d2" },
         pullStrength: 0,
-        photo: "/collage_photo_3_1772561775503.png",
+        photo: "/photo_irritating.png",
         message: "Always said with a completely straight face.",
         polaroidCaption: "said with a straight face",
         polaroidTilt: -4,
@@ -78,7 +78,7 @@ const WORDS = [
         baseRotate: 1.2,
         decorator: { symbol: "♡", size: "10px", color: "#f4b6d2" },
         pullStrength: 0,
-        photo: "/collage_photo_1_1772561726663.png",
+        photo: "/photo_happy_dance.png",
         message: "The rarest sight. Completely worth waiting for.",
         polaroidCaption: "the rarest sight ✦",
         polaroidTilt: 2,
@@ -99,7 +99,7 @@ const WORDS = [
         baseRotate: -2.0,
         decorator: { symbol: "~", size: "inherit", color: "#b89ce6" },
         pullStrength: 0,
-        photo: "/collage_photo_2_1772561749045.png",
+        photo: "/photo_so_gyiii.png",
         message: "Mid-conversation. No warning. Just gone.",
         polaroidCaption: "mid-sentence. gone.",
         polaroidTilt: -3,
@@ -121,7 +121,7 @@ const WORDS = [
         baseRotate: 0.6,
         decorator: { symbol: "—", size: "inherit", color: "#b89ce6" },
         pullStrength: 0,
-        photo: "/collage_photo_3_1772561775503.png",
+        photo: "/photo_door_rhoo.png",
         message: "Personal space. Firmly enforced. Deeply respected.",
         polaroidCaption: "firmly. always.",
         polaroidTilt: 4,
@@ -142,7 +142,7 @@ const WORDS = [
         baseRotate: -1.0,
         decorator: null,
         pullStrength: 0,
-        photo: "/collage_photo_1_1772561726663.png",
+        photo: "/photo_still_here.png",
         message: "Still reading? Of course you are.",
         polaroidCaption: "of course you are.",
         polaroidTilt: 0,
@@ -375,6 +375,7 @@ const FloatingInkWord = React.forwardRef(({ wordData, index, mouseX, mouseY, isB
                 zIndex: 10,
                 pointerEvents: isBlurred && !isRestored ? "none" : "auto",
                 display: "inline-block",
+                cursor: 'pointer',
             }}
             animate={
                 isExiting ? { scale: 0, opacity: 0 }
@@ -863,6 +864,7 @@ export default function Details() {
     const [activeIndex, setActiveIndex] = useState(null);
     const [petals, setPetals] = useState([]);
     const petalIdRef = useRef(0);
+    const lastPetalTimeRef = useRef(0);
     const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
     const [collisionDims, setCollisionDims] = useState(() => new Array(WORDS.length).fill(false));
     const frameCountRef = useRef(0);
@@ -904,7 +906,7 @@ export default function Details() {
         let rafId;
         const check = () => {
             frameCountRef.current++;
-            if (frameCountRef.current % 3 === 0 && wordRefs.current.length > 0) {
+            if (frameCountRef.current % 10 === 0 && wordRefs.current.length > 0) {
                 const rects = wordRefs.current.map(ref => ref?.getBoundingClientRect?.() || null);
                 const newDims = new Array(WORDS.length).fill(false);
 
@@ -954,19 +956,23 @@ export default function Details() {
             }
 
             // Petal trail — throttle to max 18
-            setPetals((prev) => {
-                if (prev.length >= 18) return prev;
-                const id = petalIdRef.current++;
-                return [
-                    ...prev,
-                    {
-                        id,
-                        x: e.clientX - rect.left,
-                        y: e.clientY - rect.top,
-                        rotate: Math.random() * 360,
-                    },
-                ];
-            });
+            const now = Date.now();
+            if (now - lastPetalTimeRef.current > 80) {
+                lastPetalTimeRef.current = now;
+                setPetals((prev) => {
+                    if (prev.length >= 18) return prev;
+                    const id = petalIdRef.current++;
+                    return [
+                        ...prev,
+                        {
+                            id,
+                            x: e.clientX - rect.left,
+                            y: e.clientY - rect.top,
+                            rotate: Math.random() * 360,
+                        },
+                    ];
+                });
+            }
         },
         [mouseX, mouseY, farX, farY, nearX, nearY, activeWord]
     );
@@ -1040,7 +1046,12 @@ export default function Details() {
 
     // Close handler
     const handleClose = useCallback(() => {
-        setRestoreIndex(0);
+        setActiveWord(null);
+        setActiveIndex(null);
+        setPhase(null);
+        setDissolveOrigin(null);
+        setShowParticles(false);
+        setRestoreIndex(-1);
     }, []);
 
     // Staggered restore
@@ -1072,7 +1083,7 @@ export default function Details() {
             } else {
                 setRestoreIndex(r => r + 1);
             }
-        }, 80);
+        }, 30);
         return () => clearTimeout(timer);
     }, [restoreIndex, activeIndex]);
 
@@ -1511,7 +1522,7 @@ export default function Details() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.6 }}
+                        transition={{ duration: 0.4 }}
                         style={{
                             position: "absolute",
                             inset: 0,
@@ -1520,6 +1531,7 @@ export default function Details() {
                             backdropFilter: "blur(8px)",
                             WebkitBackdropFilter: "blur(8px)",
                             cursor: "pointer",
+                            pointerEvents: isActive ? "auto" : "none",
                         }}
                     />
                 )}

@@ -4,36 +4,49 @@ import { useSound } from '../App';
 
 const RECEIPT_LINES = [
     { text: 'RASHIII & CO.', type: 'header', delay: 0 },
-    { text: 'est. somewhere in 2024', type: 'subheader', delay: 0.15 },
-    { text: '─────────────────', type: 'divider', delay: 0.25 },
-    { text: 'what actually changed', type: 'section', delay: 0.35 },
-    { text: '─────────────────', type: 'divider', delay: 0.45 },
-    { text: 'started apologising     ✓', type: 'item', delay: 0.55 },
-    { text: '(not just moving on)', type: 'note', delay: 0.65 },
-    { text: '', type: 'spacer', delay: 0.7 },
-    { text: 'stopped assuming worst  ✓', type: 'item', delay: 0.8 },
-    { text: '(took a while. she helped.)', type: 'note', delay: 0.9 },
-    { text: '', type: 'spacer', delay: 0.95 },
-    { text: 'learned the difference', type: 'item', delay: 1.05 },
-    { text: 'between forgiven        ✓', type: 'item', delay: 1.1 },
-    { text: 'and understood', type: 'item', delay: 1.15 },
-    { text: '(she gave both)', type: 'note', delay: 1.22 },
-    { text: '', type: 'spacer', delay: 1.27 },
-    { text: 'got better at staying   ✓', type: 'item', delay: 1.35 },
-    { text: '(had a good example)', type: 'note', delay: 1.45 },
-    { text: '─────────────────', type: 'divider', delay: 1.55 },
-    { text: 'SUBTOTAL:    all of it', type: 'total', delay: 1.65 },
-    { text: 'DISCOUNT:    none. ever.', type: 'total', delay: 1.72 },
-    { text: 'TAX:         worth it', type: 'total', delay: 1.79 },
-    { text: '─────────────────', type: 'divider', delay: 1.87 },
-    { text: 'amount owed: unpayable', type: 'final', delay: 2.0 },
-    { text: '', type: 'spacer', delay: 2.1 },
-    { text: 'thank you for every', type: 'closing', delay: 2.2 },
-    { text: 'chance you gave.', type: 'closing', delay: 2.3 },
-    { text: '─────────────────', type: 'divider', delay: 2.4 },
-    { text: '* keep receipt', type: 'footer', delay: 2.5 },
-    { text: '  it matters.', type: 'footer', delay: 2.58 },
-    { text: '─────────────────', type: 'divider', delay: 2.65 },
+    { text: 'emotional repair services', type: 'subheader', delay: 0.12 },
+    { text: '─────────────────', type: 'divider', delay: 0.22 },
+    { text: 'what she fixed', type: 'section', delay: 0.32 },
+    { text: '(without making it a thing)', type: 'note', delay: 0.40 },
+    { text: '─────────────────', type: 'divider', delay: 0.50 },
+    { text: 'when I went quiet —          ✓', type: 'item', delay: 0.60 },
+    { text: 'she just knew.', type: 'item', delay: 0.66 },
+    { text: '(bina bataye. every time.)', type: 'note', delay: 0.74 },
+    { text: '', type: 'spacer', delay: 0.80 },
+    { text: 'apologizing badly            ✓', type: 'item', delay: 0.90 },
+    { text: 'she showed me how.', type: 'item', delay: 0.96 },
+    { text: '(by doing it first. always.)', type: 'note', delay: 1.04 },
+    { text: '', type: 'spacer', delay: 1.10 },
+    { text: '"irritating." — took me way  ✓', type: 'item', delay: 1.20 },
+    { text: 'too long to understand.', type: 'item', delay: 1.26 },
+    { text: '(it was concern, not anger)', type: 'note', delay: 1.34 },
+    { text: '', type: 'spacer', delay: 1.40 },
+    { text: 'the hard part. she stayed.   ✓', type: 'item', delay: 1.50 },
+    { text: "didn't have to. did anyway.", type: 'item', delay: 1.56 },
+    { text: "(that one I won't forget.)", type: 'note', delay: 1.64 },
+    { text: '', type: 'spacer', delay: 1.70 },
+    { text: "patience I didn't deserve    ✓", type: 'item', delay: 1.80 },
+    { text: 'given anyway.', type: 'item', delay: 1.86 },
+    { text: '(no conditions attached)', type: 'note', delay: 1.94 },
+    { text: '', type: 'spacer', delay: 2.00 },
+    { text: 'late night overthinking       ✓', type: 'item', delay: 2.10 },
+    { text: 'she listened anyway.', type: 'item', delay: 2.16 },
+    { text: "(didn't even complain)", type: 'note', delay: 2.24 },
+    { text: '─────────────────', type: 'divider', delay: 2.34 },
+    { text: 'TODAY:       her birthday', type: 'total', delay: 2.44 },
+    { text: 'STILL OWE:   bahut kuch', type: 'total', delay: 2.52 },
+    { text: 'DUE DATE:    ongoing', type: 'total', delay: 2.60 },
+    { text: 'WORTH IT:    obviously.', type: 'total', delay: 2.68 },
+    { text: '─────────────────', type: 'divider', delay: 2.78 },
+    { text: 'VOID IF: she ever thinks', type: 'final', delay: 2.90 },
+    { text: "         she wasn't worth it.", type: 'final', delay: 2.98 },
+    { text: '─────────────────', type: 'divider', delay: 3.08 },
+    { text: 'achaa.', type: 'closing', delay: 3.20 },
+    { text: '(no explanation needed)', type: 'note', delay: 3.28 },
+    { text: '─────────────────', type: 'divider', delay: 3.38 },
+    { text: '* keep this one.', type: 'footer', delay: 3.48 },
+    { text: '  17 March.', type: 'footer', delay: 3.56 },
+    { text: '─────────────────', type: 'divider', delay: 3.64 },
 ];
 
 export default function Status() {
@@ -52,15 +65,23 @@ export default function Status() {
     const handleDragEnd = (_, info) => {
         if (isTornOff) return;
 
-        if (info.offset.y > 150 || info.velocity.y > 800) {
+        if (info.offset.x > 120 || info.velocity.x > 600) {
             setIsTornOff(true);
             receiptControls.start({
-                y: "110vh",
+                x: "110vw",
                 opacity: 0,
-                rotate: 5,
-                transition: { duration: 0.5, ease: "easeIn" }
+                rotate: 8,
+                y: 30,
+                transition: { duration: 0.45, ease: "easeIn" }
             }).then(() => {
                 setShowThanks(true);
+            });
+        } else {
+            // Snap back if not torn far enough
+            receiptControls.start({
+                x: 0,
+                rotate: 0,
+                transition: { type: 'spring', stiffness: 300, damping: 25 }
             });
         }
     };
@@ -104,6 +125,45 @@ export default function Status() {
                 break;
             default:
                 break;
+        }
+
+        if (item.type === 'item' && item.text.includes('✓')) {
+            const mainText = item.text.replace('✓', '');
+            return (
+                <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={isPrinted ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.2, delay: item.delay }}
+                    style={{
+                        fontFamily: "'Courier New', Courier, monospace",
+                        fontSize: '0.82rem',
+                        color: '#3e3552',
+                        whiteSpace: 'pre',
+                        lineHeight: 1.4,
+                    }}
+                >
+                    {mainText}
+                    <motion.span
+                        initial={{ scale: 0, rotate: -20, opacity: 0 }}
+                        animate={isPrinted ? { scale: 1, rotate: 0, opacity: 1 } : {}}
+                        transition={{
+                            type: 'spring',
+                            stiffness: 400,
+                            damping: 12,
+                            delay: item.delay + 0.18,
+                        }}
+                        style={{
+                            display: 'inline-block',
+                            color: '#b89ce6',
+                            transformOrigin: 'center',
+                            fontWeight: 600,
+                        }}
+                    >
+                        ✓
+                    </motion.span>
+                </motion.div>
+            );
         }
 
         return (
@@ -164,23 +224,77 @@ export default function Status() {
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ duration: 0.8 }}
+                            transition={{ duration: 1 }}
                             style={{
                                 position: 'absolute',
                                 inset: 0,
-                                paddingTop: 40,
+                                paddingTop: 0,
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
+                                justifyContent: 'flex-end',
+                                paddingBottom: 64,
+                                gap: 12,
                                 zIndex: 0,
                             }}
                         >
-                            <p style={{ fontFamily: "'Caveat', cursive", fontSize: '1.4rem', color: '#b89ce6', marginBottom: 6 }}>
-                                receipt kept. ✦
+                            <div style={{
+                                width: 48,
+                                height: 14,
+                                background: 'rgba(220,210,240,0.75)',
+                                borderRadius: 2,
+                                transform: 'rotate(-3deg)',
+                                marginBottom: 8,
+                            }} />
+
+                            <p style={{
+                                fontFamily: "'Playfair Display', Georgia, serif",
+                                fontStyle: 'italic',
+                                fontSize: '1.15rem',
+                                color: '#3e3552',
+                                textAlign: 'center',
+                                lineHeight: 1.7,
+                                maxWidth: 240,
+                            }}>
+                                you kept it.
                             </p>
-                            <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontStyle: 'italic', fontSize: '0.85rem', opacity: 0.4, color: '#3e3552' }}>
-                                it really does matter.
+
+                            <p style={{
+                                fontFamily: "'Caveat', cursive",
+                                fontSize: '1rem',
+                                color: '#b89ce6',
+                                textAlign: 'center',
+                                opacity: 0.7,
+                            }}>
+                                that's very you. ✦
                             </p>
+
+                            <motion.div
+                                initial={{ scaleX: 0 }}
+                                animate={{ scaleX: 1 }}
+                                transition={{ delay: 0.8, duration: 0.6 }}
+                                style={{
+                                    height: 1,
+                                    width: 80,
+                                    background: 'linear-gradient(90deg, transparent, #b89ce6, transparent)',
+                                    marginTop: 8,
+                                }}
+                            />
+
+                            <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 0.4 }}
+                                transition={{ delay: 1.4, duration: 0.8 }}
+                                style={{
+                                    fontFamily: "'Playfair Display', Georgia, serif",
+                                    fontStyle: 'italic',
+                                    fontSize: '0.82rem',
+                                    color: '#3e3552',
+                                    textAlign: 'center',
+                                }}
+                            >
+                                17 March matters.
+                            </motion.p>
                         </motion.div>
                     )}
 
@@ -191,9 +305,9 @@ export default function Status() {
                         viewport={{ once: true, margin: "-300px" }}
                         transition={{ duration: 0.8, ease: "linear" }}
                         onAnimationComplete={() => setIsPrinted(true)}
-                        drag={isPrinted && !isTornOff ? "y" : false}
-                        dragConstraints={{ top: 0 }}
-                        dragElastic={{ top: 0.05, bottom: 0 }}
+                        drag={isPrinted && !isTornOff ? "x" : false}
+                        dragConstraints={{ left: 0 }}
+                        dragElastic={{ left: 0.05, right: 0 }}
                         onDragStart={() => {
                             document.body.style.overflow = 'hidden';
                             setIsDragging(true);
@@ -246,7 +360,7 @@ export default function Status() {
                                         }}
                                     >
                                         <motion.span
-                                            animate={{ y: [0, 4, 0] }}
+                                            animate={{ x: [0, 5, 0] }}
                                             transition={{
                                                 duration: 1.8,
                                                 repeat: Infinity,
@@ -261,7 +375,7 @@ export default function Status() {
                                                 opacity: 0.5,
                                             }}
                                         >
-                                            ↓ drag to tear
+                                            drag → to tear
                                         </motion.span>
                                     </motion.div>
                                 )}

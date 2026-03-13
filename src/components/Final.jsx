@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSound } from '../App';
+import GooeyText from './GooeyText';
 
 const Frosting = ({ id }) => (
     <svg width="100%" height="15" style={{ position: 'absolute', top: 0, left: 0, opacity: 0.8, pointerEvents: 'none' }}>
@@ -482,21 +483,30 @@ export default function Final() {
                                     </motion.p>
 
                                     {/* Line 2 */}
-                                    <motion.p
+                                    <motion.div
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 1.2, delay: 1.2 }}
-                                        style={{
+                                        style={{ marginBottom: '1.5rem', position: 'relative' }}
+                                    >
+                                        <p style={{
                                             fontFamily: "'Playfair Display', Georgia, serif",
                                             fontStyle: 'italic',
                                             fontSize: 'clamp(2rem, 6vw, 3.2rem)',
                                             color: '#3e3552',
-                                            marginBottom: '1.5rem',
                                             fontWeight: 600,
-                                        }}
-                                    >
-                                        Happy Birthday, Rashiii.
-                                    </motion.p>
+                                            textAlign: 'center',
+                                            marginBottom: '0.5rem',
+                                        }}>
+                                            Happy Birthday,
+                                        </p>
+                                        <GooeyText
+                                            texts={["Rashiii.", "Kitkat.", "Rashuu."]}
+                                            morphTime={1.2}
+                                            cooldownTime={2}
+                                            style={{ height: 'clamp(3rem, 8vw, 5rem)' }}
+                                        />
+                                    </motion.div>
 
                                     {/* Line 3 */}
                                     <motion.div
@@ -633,6 +643,38 @@ export default function Final() {
                                     >
                                         made with too many browser tabs and not enough sleep. worth it. ✦
                                     </motion.p>
+
+                                    {/* Quiet escape — appears late */}
+                                    <motion.button
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 0.2 }}
+                                        whileHover={{ opacity: 0.6 }}
+                                        transition={{ delay: 8, duration: 1.5 }}
+                                        onClick={() => {
+                                            document.body.style.overflow = 'auto';
+                                            setStage(0);
+                                            setPhase(0);
+                                            setCandlesLit(false);
+                                            setMicStatus('initial');
+                                            setTimeout(() => {
+                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                            }, 400);
+                                        }}
+                                        style={{
+                                            position: 'fixed',
+                                            top: 24,
+                                            right: 24,
+                                            background: 'none',
+                                            border: 'none',
+                                            fontFamily: "'Caveat', cursive",
+                                            fontSize: '0.85rem',
+                                            color: '#3e3552',
+                                            cursor: 'none',
+                                            zIndex: 10,
+                                        }}
+                                    >
+                                        ← go back
+                                    </motion.button>
                                 </motion.div>
                             )}
                         </AnimatePresence>

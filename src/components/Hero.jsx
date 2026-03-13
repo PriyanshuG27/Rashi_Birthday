@@ -232,6 +232,9 @@ function HeroIntro({ onComplete }) {
 
 export default function Hero() {
   const containerRef = useRef(null);
+  const [hasCompleted] = useState(() =>
+    localStorage.getItem('gate_passed') === 'true'
+  );
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isHeartHovered, setIsHeartHovered] = useState(false);
   const [heartBurst, setHeartBurst] = useState(false);
@@ -404,7 +407,7 @@ export default function Hero() {
           <motion.p
             initial={{ opacity: 0, y: 6 }}
             animate={introComplete ? { opacity: 0.72, y: 0 } : { opacity: 0, y: 6 }}
-            transition={{ duration: 0.6, delay: 3.4 }}
+            transition={{ duration: 0.6, delay: 2.8 }}
             style={{
               fontFamily: "var(--font-handwriting)",
               fontSize: '1.05rem',
@@ -413,7 +416,10 @@ export default function Hero() {
               marginTop: '1.5rem',
             }}
           >
-            the day you became someone's favourite person.
+            {hasCompleted
+              ? "still here. of course."
+              : "the day you became someone's favourite person."
+            }
           </motion.p>
 
           {/* Pulsing ✦ */}
@@ -438,7 +444,7 @@ export default function Hero() {
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={introComplete ? { height: 40, opacity: 1 } : { height: 0, opacity: 0 }}
-            transition={{ duration: 1.2, delay: 4.4, ease: "easeInOut" }}
+            transition={{ duration: 1.2, delay: 3.2, ease: "easeInOut" }}
             className="hero-divider-animated"
           />
 
@@ -446,7 +452,7 @@ export default function Hero() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={introComplete ? { opacity: 0.5 } : { opacity: 0 }}
-            transition={{ duration: 1, delay: 4.7 }}
+            transition={{ duration: 1, delay: 3.6 }}
             style={{
               fontFamily: "var(--font-handwriting)",
               fontSize: '0.9rem',
