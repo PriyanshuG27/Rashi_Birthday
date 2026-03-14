@@ -14,7 +14,7 @@ const WORDS = [
         baseRotate: -1.5,
         decorator: { symbol: "✦", size: "4px", color: "#b89ce6" },
         pullStrength: 0,
-        photo: "/photo_achaa.png",
+        photo: "/photo_achaa.jpg",
         message: "5 distinct meanings. Depending entirely on the tone.",
         polaroidCaption: "every single time 🥲",
         polaroidTilt: -2,

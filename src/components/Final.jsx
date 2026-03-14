@@ -508,25 +508,57 @@ export default function Final() {
                                         />
                                     </motion.div>
 
-                                    {/* Plain moment — no decoration */}
-                                    <motion.p
+                                    {/* Plain moment — ruled apart */}
+                                    <motion.div
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 1, delay: 2.0 }}
                                         style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            gap: 10,
+                                            marginBottom: '1.8rem',
+                                            width: '100%',
+                                            maxWidth: 320,
+                                        }}
+                                    >
+                                        <motion.div
+                                            initial={{ scaleX: 0 }}
+                                            animate={{ scaleX: 1 }}
+                                            transition={{ duration: 0.6, delay: 2.2, ease: 'easeOut' }}
+                                            style={{
+                                                height: 1,
+                                                width: '100%',
+                                                background: 'linear-gradient(90deg, transparent, rgba(184,156,230,0.35), transparent)',
+                                                transformOrigin: 'center',
+                                            }}
+                                        />
+                                        <p style={{
                                             fontFamily: "'Inter', system-ui, sans-serif",
                                             fontStyle: 'normal',
                                             fontWeight: 400,
-                                            fontSize: '0.9rem',
+                                            fontSize: '0.88rem',
                                             color: '#3e3552',
-                                            opacity: 0.55,
+                                            opacity: 0.6,
+                                            margin: 0,
                                             textAlign: 'center',
-                                            marginBottom: '1.8rem',
-                                            letterSpacing: 0,
-                                        }}
-                                    >
-                                        I just wanted you to know that I notice.
-                                    </motion.p>
+                                            letterSpacing: '0.03em',
+                                        }}>
+                                            I just wanted you to know that I notice.
+                                        </p>
+                                        <motion.div
+                                            initial={{ scaleX: 0 }}
+                                            animate={{ scaleX: 1 }}
+                                            transition={{ duration: 0.6, delay: 2.5, ease: 'easeOut' }}
+                                            style={{
+                                                height: 1,
+                                                width: '100%',
+                                                background: 'linear-gradient(90deg, transparent, rgba(184,156,230,0.35), transparent)',
+                                                transformOrigin: 'center',
+                                            }}
+                                        />
+                                    </motion.div>
 
                                     {/* Line 3 */}
                                     <motion.div
