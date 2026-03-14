@@ -8,7 +8,7 @@ import { useSound } from '../App';
 const WORDS = [
     {
         word: "Achaa.",
-        position: { top: "10%", left: "8%" },
+        position: { top: "60%", left: "5%" },
         fontSize: "2.1rem",
         baseOpacity: 0.82,
         baseRotate: -1.5,
@@ -35,7 +35,7 @@ const WORDS = [
         baseRotate: 0.8,
         decorator: { symbol: "· ·", size: "6px", color: "#b89ce6" },
         pullStrength: 0,
-        photo: "/photo_aye_bade.png",
+        photo: "/photo_ayebade.jpg",
         message: "The ultimate shutdown. No further questions.",
         polaroidCaption: "no further questions.",
         polaroidTilt: 3,
@@ -56,7 +56,7 @@ const WORDS = [
         baseRotate: -0.5,
         decorator: { symbol: "!", size: "0.6rem", color: "#f4b6d2" },
         pullStrength: 0,
-        photo: "/photo_irritating.png",
+        photo: "/photo_irritaing.jpg",
         message: "Always said with a completely straight face.",
         polaroidCaption: "said with a straight face",
         polaroidTilt: -4,
@@ -72,13 +72,13 @@ const WORDS = [
     },
     {
         word: "Happy dance + kick",
-        position: { top: "20%", left: "35%" },
+        position: { top: "42%", left: "66%" },
         fontSize: "1.5rem",
         baseOpacity: 0.65,
         baseRotate: 1.2,
         decorator: { symbol: "♡", size: "10px", color: "#f4b6d2" },
         pullStrength: 0,
-        photo: "/photo_happy_dance.png",
+        photo: "/photo_happy.jpg",
         message: "The rarest sight. Completely worth waiting for.",
         polaroidCaption: "the rarest sight ✦",
         polaroidTilt: 2,
@@ -99,7 +99,7 @@ const WORDS = [
         baseRotate: -2.0,
         decorator: { symbol: "~", size: "inherit", color: "#b89ce6" },
         pullStrength: 0,
-        photo: "/photo_so_gyiii.png",
+        photo: "/photo_sogyii.jpg",
         message: "Mid-conversation. No warning. Just gone.",
         polaroidCaption: "mid-sentence. gone.",
         polaroidTilt: -3,
@@ -121,7 +121,7 @@ const WORDS = [
         baseRotate: 0.6,
         decorator: { symbol: "—", size: "inherit", color: "#b89ce6" },
         pullStrength: 0,
-        photo: "/photo_door_rhoo.png",
+        photo: "/photo_doorrho.jpg",
         message: "Personal space. Firmly enforced. Deeply respected.",
         polaroidCaption: "firmly. always.",
         polaroidTilt: 4,
@@ -142,7 +142,7 @@ const WORDS = [
         baseRotate: -1.0,
         decorator: null,
         pullStrength: 0,
-        photo: "/photo_still_here.png",
+        photo: "/photo_stillhere.jpg",
         message: "I know. I see it.",
         polaroidCaption: "that one matters most.",
         polaroidTilt: 0,
@@ -359,11 +359,10 @@ const FloatingInkWord = React.forwardRef(({ wordData, index, mouseX, mouseY, isB
         /* OUTER: magnetic offset */
         <motion.span
             ref={mergedRef}
-            onClick={(e) => onSelect(index, e)}
             style={{
                 position: "absolute",
                 ...(isMobile ? {
-                    top: `${8 + index * 11}%`,
+                    top: `${38 + index * 9}%`,
                     left: '50%',
                     x: '-50%',
                 } : {
@@ -372,10 +371,9 @@ const FloatingInkWord = React.forwardRef(({ wordData, index, mouseX, mouseY, isB
                     y: springY,
                 }),
                 willChange: "transform",
-                zIndex: 10,
+                zIndex: 20,
                 pointerEvents: isBlurred && !isRestored ? "none" : "auto",
                 display: "inline-block",
-                cursor: 'pointer',
             }}
             animate={
                 isExiting ? { scale: 0, opacity: 0 }
@@ -387,8 +385,9 @@ const FloatingInkWord = React.forwardRef(({ wordData, index, mouseX, mouseY, isB
                     : { filter: { duration: 0.3 } }
             }
         >
-            {/* INNER: roaming path */}
+            {/* INNER: roaming path — onClick here so hit-area matches visual position */}
             <motion.span
+                onClick={(e) => onSelect(index, e)}
                 animate={pixelPath && !isBlurred ? {
                     x: pixelPath.x,
                     y: pixelPath.y,
@@ -405,6 +404,7 @@ const FloatingInkWord = React.forwardRef(({ wordData, index, mouseX, mouseY, isB
                     display: "inline-block",
                     position: "relative",
                     x: wordData.microJitter ? jitterX : undefined,
+                    cursor: 'pointer',
                 }}
                 onMouseEnter={() => !isMobile && setHovered(true)}
                 onMouseLeave={() => !isMobile && setHovered(false)}
@@ -559,7 +559,7 @@ function ActiveCard({ chip, phase, originX, originY, sectionRef, onPhaseChange }
     }, [onPhaseChange, playPolaroidSettle]);
 
     if (isSecret) {
-        // ── "Still here." — flash-in behavior ──
+        // ── "Still here." — polaroid frame, portrait photo ──
         return (
             <motion.div
                 onClick={(e) => e.stopPropagation()}
@@ -573,47 +573,122 @@ function ActiveCard({ chip, phase, originX, originY, sectionRef, onPhaseChange }
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    gap: 12,
+                    gap: 16,
                     cursor: "default",
                 }}
             >
-                {/* Flash photo */}
+                {/* Polaroid frame */}
                 <motion.div
-                    style={{ position: "relative", overflow: "hidden", borderRadius: 4 }}
+                    initial={{ y: -25, rotate: -6, scale: 0.92, opacity: 0 }}
+                    animate={{ y: 0, rotate: chip.polaroidTilt, scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 160, damping: 12 }}
+                    onAnimationComplete={() => onPhaseChange('typing')}
+                    style={{
+                        background: "#fff",
+                        padding: "12px 12px 52px 12px",
+                        borderRadius: 3,
+                        boxShadow: "3px 8px 24px rgba(0,0,0,0.14)",
+                        position: "relative",
+                        width: 300,
+                    }}
                 >
+                    {/* Photo */}
                     <motion.img
                         src={chip.photo}
                         alt={chip.word}
-                        initial={{ opacity: 1, filter: "brightness(4)" }}
+                        initial={{ filter: "brightness(4)" }}
                         animate={{ filter: "brightness(1)" }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.4 }}
                         style={{
-                            width: cardWidth,
-                            height: cardHeight,
+                            width: "100%",
+                            height: 340,
                             objectFit: "cover",
+                            objectPosition: "center top",
+                            borderRadius: 2,
                             display: "block",
                         }}
                     />
-                    {/* Vignette overlay */}
+
+                    {/* Vignette */}
                     <div style={{
                         position: "absolute",
-                        inset: 0,
-                        background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.15) 100%)",
+                        inset: 12,
+                        background: "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.10) 100%)",
                         pointerEvents: "none",
+                        borderRadius: 2,
                     }} />
+
+                    {/* Washi tape */}
+                    <motion.div
+                        initial={{ y: -20, scale: 0, opacity: 0 }}
+                        animate={{ y: 0, scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 280, damping: 18, delay: 0.2 }}
+                        style={{
+                            position: "absolute",
+                            top: -9,
+                            left: "50%",
+                            marginLeft: -29,
+                            width: 58,
+                            height: 18,
+                            background: "rgba(220,210,240,0.82)",
+                            borderRadius: 2,
+                            transform: "rotate(-18deg)",
+                            zIndex: 5,
+                        }}
+                    />
+
+                    {/* Lavender sprig */}
+                    <motion.img
+                        src="/lavender_branch.png"
+                        alt=""
+                        initial={{ x: 40, y: -20, opacity: 0 }}
+                        animate={{ x: 0, y: 0, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 120, damping: 14, delay: 0.35 }}
+                        style={{
+                            position: "absolute",
+                            top: -30,
+                            right: -20,
+                            width: 85,
+                            transform: "rotate(-38deg)",
+                            filter: "drop-shadow(1px 3px 5px rgba(0,0,0,0.12))",
+                            pointerEvents: "none",
+                            zIndex: 6,
+                        }}
+                    />
+
+                    {/* Caption */}
+                    <p style={{
+                        position: 'absolute',
+                        bottom: 12,
+                        left: 12,
+                        right: 12,
+                        fontFamily: "var(--font-handwriting)",
+                        fontSize: '0.9rem',
+                        color: '#3e3552',
+                        opacity: 0.55,
+                        textAlign: 'center',
+                    }}>
+                        {chip.polaroidCaption}
+                    </p>
                 </motion.div>
 
-                {/* Instant message — no typewriter */}
+                {/* Message */}
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.6 }}
                     style={{
+                        background: 'rgba(255,255,255,0.82)',
+                        backdropFilter: 'blur(4px)',
+                        WebkitBackdropFilter: 'blur(4px)',
+                        borderRadius: 12,
+                        padding: '14px 24px',
+                        boxShadow: '0 2px 16px rgba(62,53,82,0.08)',
+                        border: '1px solid rgba(184,156,230,0.18)',
                         fontFamily: "'Playfair Display', Georgia, serif",
                         fontStyle: "italic",
                         fontSize: "0.9rem",
                         color: "#3e3552",
-                        opacity: 0.82,
                         textAlign: "center",
                         maxWidth: 280,
                         lineHeight: 1.6,
@@ -1412,6 +1487,7 @@ export default function Details() {
                     textAlign: "center",
                     paddingTop: "6rem",
                     paddingBottom: "2rem",
+                    pointerEvents: "none",
                 }}
             >
                 <h2

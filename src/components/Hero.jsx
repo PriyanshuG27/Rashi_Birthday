@@ -417,7 +417,7 @@ export default function Hero() {
             }}
           >
             {hasCompleted
-              ? "still here. of course."
+              ? "seventeen march. some days are just made different. ✦"
               : "the day you became someone's favourite person."
             }
           </motion.p>

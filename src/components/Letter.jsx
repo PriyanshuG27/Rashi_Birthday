@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence, useInView } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Sparkles } from 'lucide-react';
 import { useSound } from '../App';
 
@@ -409,12 +409,6 @@ function Envelope({ onOpen }) {
    LETTER COMPONENT
    ═══════════════════════════════════════════ */
 export default function Letter() {
-    const containerRef = useRef(null);
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start end", "end start"]
-    });
-
     const [hearts, setHearts] = useState([]);
     const [sparkleActive, setSparkleActive] = useState(false);
     const [envelopeOpened, setEnvelopeOpened] = useState(false);
@@ -427,24 +421,6 @@ export default function Letter() {
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
-
-    // Paper Lift Depth
-    const rotateX = useTransform(scrollYProgress, [0, 0.5, 1], [10, 0, -10]);
-    const rotateY = useTransform(scrollYProgress, [0, 0.5, 1], [-3, 0, 3]);
-    const zIndex = useTransform(scrollYProgress, [0, 0.5, 1], [0, 10, 0]);
-
-    // Spotlight Focus
-    const bgBlur = useTransform(scrollYProgress, [0.3, 0.5, 0.7], ["blur(0px)", "blur(8px)", "blur(0px)"]);
-    const shadowDepth = useTransform(
-        scrollYProgress,
-        [0.3, 0.5, 0.7],
-        ["0 4px 12px rgba(62, 53, 82, 0.05)", "0 25px 50px rgba(62, 53, 82, 0.2)", "0 4px 12px rgba(62, 53, 82, 0.05)"]
-    );
-    const ambientGlow = useTransform(
-        scrollYProgress,
-        [0.3, 0.5, 0.7],
-        ["rgba(184, 156, 230, 0)", "rgba(184, 156, 230, 0.15)", "rgba(184, 156, 230, 0)"]
-    );
 
     const handleDoubleClick = (e) => {
         const rect = e.currentTarget.getBoundingClientRect();
@@ -464,20 +440,7 @@ export default function Letter() {
     const showLetter = envelopeOpened || envelopePlayedRef.current;
 
     return (
-        <section className="letter-section" id="note" ref={containerRef} style={{ perspective: "1000px", position: "relative" }}>
-
-            {/* Spotlight Focus Background Blur Layer */}
-            <motion.div
-                className="letter-spotlight-bg"
-                style={{
-                    position: "absolute",
-                    inset: "-50vw",
-                    backdropFilter: bgBlur,
-                    backgroundColor: ambientGlow,
-                    zIndex: -1,
-                    pointerEvents: "none"
-                }}
-            />
+        <section className="letter-section" id="note" style={{ position: "relative" }}>
 
             {/* Envelope (Part 4) — only show if not yet opened */}
             {!showLetter && (
@@ -491,17 +454,12 @@ export default function Letter() {
                         className="letter-wrapper"
                         onDoubleClick={handleDoubleClick}
                         style={{
-                            rotateX,
-                            rotateY,
-                            zIndex,
-                            boxShadow: shadowDepth,
-                            transformStyle: "preserve-3d",
                             cursor: "cell",
                             position: "relative",
                         }}
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        transition={{ duration: 1.2, ease: "easeOut" }}
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
                     >
                         {/* Part 12: Ruled lines background */}
                         <div style={{
@@ -619,18 +577,35 @@ export default function Letter() {
 
                         <div className="letter-content" style={{ lineHeight: 1.9, position: 'relative', zIndex: 2 }}>
                             <p style={{ marginBottom: "1.2rem" }}>
-                                <span className="drop-cap">T</span>
-                                his isn't a loud celebration. You don't like those anyway.
+                                <span className="drop-cap">Y</span>
+                                ou're honestly the most chaotic, dramatic, and real person I've ever met — and I mean that in the most respectful way possible 😭✨
                             </p>
                             <p style={{ marginBottom: "1.2rem" }}>
-                                Consider this a quiet acknowledgment of the space you occupy.
+                                We started off as just classmates. A few group talks. Some random jokes. Okay fine — <span className="hover-underline">straight-up roasts</span>. 🔥 And somehow, in the middle of this messy college life, you became my constant. Not by announcing it. Not with some big moment. Just... gradually, and then completely.
                             </p>
                             <p style={{ marginBottom: "1.2rem" }}>
-                                You demand respect by simply existing, expect <span className="hover-underline">consistency</span> because
-                                you offer it, and disappear when your social battery hits <span className="hover-underline">1%</span>.
+                                Here's the thing about you that most people probably don't say out loud — you feel everything deeply, but you never make it anyone else's problem. 🌿 You're the kind of person who notices the small stuff, remembers what others forget, and cares way more than you let on. On the outside you're all composed and "I don't care," but inside? You're paying attention to <span className="hover-underline">everything</span>.
                             </p>
                             <p style={{ marginBottom: "1.2rem" }}>
-                                It is a very specific, slightly intimidating, incredibly <span className="hover-underline">genuine</span> way to be. I wouldn't recommend changing a single thing.
+                                I've quietly filed some things away over time. The way <em>"Achaa"</em> means five completely different things depending on your tone — and how I now know which one is which. The happy dance that only comes out when something actually good happens, the one you probably don't even realize I've noticed. The complete mid-conversation disappearing act 🥲. And <em>"Door rhoo, chipko nhii"</em> — which I've slowly figured out isn't a warning. It's your way of saying you're comfortable enough to just be yourself.
+                            </p>
+                            <p style={{ marginBottom: "1.2rem" }}>
+                                You roast me like it's your full-time profession 😂, but the way you defend me? That's a different level. You can see me dead but never against you — and that's just facts. That mix of soft and fierce? Genuinely rare. 💜
+                            </p>
+                            <p style={{ marginBottom: "1.2rem" }}>
+                                You've called me out when I was wrong. You've told me harsh truths no one else would 🗣️. You've forced me to grow up when I was acting like a kid. And you didn't do it to be mean — you did it because you actually <span className="hover-underline">gave a damn</span>. There's a version of me that would still be confused and going around in circles if you hadn't showed up and simply refused to let that happen.
+                            </p>
+                            <p style={{ marginBottom: "1.2rem" }}>
+                                Lowkey… you did help turn a confused boy into someone a little more sorted. (Yes, even the "how to behave around the other gender" lessons — <em>shuttlecock</em> will forever be remembered. 🏸 Never. Living. That. Down.)
+                            </p>
+                            <p style={{ marginBottom: "1.2rem" }}>
+                                You're not just someone I laugh with. You're someone I <span className="hover-underline">respect</span>. 🫂 The kind of person who doesn't need loud gestures to feel valued — just sincerity, effort, and someone who genuinely tries to understand them. I hope this whole website counts as trying.
+                            </p>
+                            <p style={{ marginBottom: "1.2rem" }}>
+                                Thank you for not giving up on me — especially during the times I made it hard 🥹. I don't say it enough. But I notice it. Every single time. And I appreciate it more than I know how to put into words.
+                            </p>
+                            <p style={{ marginBottom: "1.2rem" }}>
+                                I don't know how we went from classmates to this. But whatever <em>this</em> is — 🌸 I'm really, really glad we did.
                             </p>
 
                             <p
@@ -638,7 +613,7 @@ export default function Letter() {
                                 onClick={() => setSparkleActive(true)}
                                 onMouseLeave={() => setSparkleActive(false)}
                             >
-                                And it's not going anywhere.
+                                And relax — I'm not letting you disappear again.
                                 <AnimatePresence>
                                     {sparkleActive && (
                                         <motion.span
@@ -655,7 +630,7 @@ export default function Letter() {
                             </p>
                         </div>
 
-                        {/* Part 5: Sign-off block */}
+                        {/* Sign-off block */}
                         <div style={{
                             marginTop: '2rem',
                             textAlign: 'right',
@@ -671,7 +646,8 @@ export default function Letter() {
                                 color: '#3e3552',
                                 marginBottom: '0.3rem',
                             }}>
-                                — always yours,
+                                Happy Birthday to my favorite chaos, my personal reality check,
+                                and one of the best things college gave me. ✦
                             </p>
                             <p style={{
                                 fontFamily: 'var(--font-handwriting)',
@@ -679,7 +655,7 @@ export default function Letter() {
                                 color: '#3e3552',
                                 marginBottom: '0.3rem',
                             }}>
-                                dumbo
+                                bhondu 💜
                             </p>
                             <p style={{
                                 fontFamily: 'var(--font-handwriting)',
@@ -687,7 +663,7 @@ export default function Letter() {
                                 color: '#b89ce6',
                                 opacity: 0.6,
                             }}>
-                                17 March 2025
+                                17 March 2026
                             </p>
                         </div>
 
