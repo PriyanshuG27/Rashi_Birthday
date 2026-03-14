@@ -12,118 +12,142 @@ function CassetteTape() {
     const [isHovered, setIsHovered] = useState(false);
     const [notes, setNotes] = useState([]);
     const noteIdRef = useRef(0);
-    
+
     // Player state
     const [isPlaying, setIsPlaying] = useState(false);
     const [activeLyric, setActiveLyric] = useState(null);
     const [showPlayer, setShowPlayer] = useState(false);
-    const [embedController, setEmbedController] = useState(null);
+    const [progress, setProgress] = useState(0);   // 0-1
+    const [duration, setDuration] = useState(0);   // seconds
+    const ytPlayerRef = useRef(null);
+    const lyricIntervalRef = useRef(null);
+
+    // Bruno Mars – Count On Me (Bruno Mars VEVO official upload)
+    const YT_VIDEO_ID = '6k8cpUkKK4c';
 
     const LYRICS = [
         // Verse 1
-        { text: "if you ever find yourself stuck in the middle of the sea", start: 5000, end: 10500 },
-        { text: "I'll sail the world to find you.", start: 11000, end: 16000 },
-        { text: "if you ever find yourself lost in the dark and you can't see", start: 16500, end: 22000 },
-        { text: "I'll be the light to guide you.", start: 22500, end: 27000 },
-        
+        { text: "if you ever find yourself stuck in the middle of the sea", start: 4900, end: 10400 },
+        { text: "I'll sail the world to find you.", start: 10900, end: 15900 },
+        { text: "if you ever find yourself lost in the dark and you can't see", start: 16400, end: 21900 },
+        { text: "I'll be the light to guide you.", start: 22400, end: 26900 },
+
         // Pre-Chorus
-        { text: "we find out what we're made of", start: 27500, end: 30500 },
-        { text: "when we are called to help our friends in need.", start: 31000, end: 37000 },
-        
-        // Chorus
-        { text: "you can count on me like 1, 2, 3.", start: 37500, end: 42000 },
-        { text: "I'll be there.", start: 42500, end: 45500 },
-        { text: "and I know when I need it", start: 46000, end: 48000 },
-        { text: "I can count on you like 4, 3, 2.", start: 48500, end: 53000 },
-        { text: "you'll be there.", start: 53500, end: 55000 },
-        { text: "'cause that's what friends are supposed to do.", start: 55500, end: 59500 },
-        { text: "oh yeah.", start: 60500, end: 68500 },
-        
+        { text: "we find out what we're made of", start: 27400, end: 30400 },
+        { text: "when we are called to help our friends in need.", start: 30900, end: 36900 },
+
+        // Chorus 1
+        { text: "you can count on me like 1, 2, 3.", start: 37400, end: 41900 },
+        { text: "I'll be there.", start: 42400, end: 45400 },
+        { text: "and I know when I need it", start: 45900, end: 47900 },
+        { text: "I can count on you like 4, 3, 2.", start: 48400, end: 52900 },
+        { text: "you'll be there.", start: 53400, end: 54900 },
+        { text: "'cause that's what friends are supposed to do.", start: 55400, end: 59400 },
+        { text: "oh yeah.", start: 60400, end: 68400 },
+
         // Verse 2
-        { text: "if you're tossin' and you're turnin' and you just can't fall asleep", start: 71000, end: 76000 },
-        { text: "I'll sing a song beside you.", start: 77000, end: 82000 },
-        { text: "and if you ever forget how much you really mean to me", start: 82500, end: 88000 },
-        { text: "every day I will remind you.", start: 88500, end: 93500 },
-        
-        // Pre-Chorus
-        { text: "oh, we find out what we're made of", start: 94000, end: 97000 },
-        { text: "when we are called to help our friends in need.", start: 97500, end: 103500 },
-        
-        // Chorus
-        { text: "you can count on me like 1, 2, 3.", start: 104000, end: 108500 },
-        { text: "I'll be there.", start: 109000, end: 112000 },
-        { text: "and I know when I need it", start: 112500, end: 114500 },
-        { text: "I can count on you like 4, 3, 2.", start: 115000, end: 119500 },
-        { text: "you'll be there.", start: 120000, end: 122000 },
-        { text: "'cause that's what friends are supposed to do.", start: 122500, end: 126500 },
-        { text: "oh yeah.", start: 127000, end: 133500 },
-        
+        { text: "if you're tossin' and you're turnin' and you just can't fall asleep", start: 70900, end: 75900 },
+        { text: "I'll sing a song beside you.", start: 76900, end: 81900 },
+        { text: "and if you ever forget how much you really mean to me", start: 82400, end: 87900 },
+        { text: "every day I will remind you.", start: 88400, end: 93400 },
+
+        // Pre-Chorus 2
+        { text: "oh, we find out what we're made of", start: 93900, end: 96900 },
+        { text: "when we are called to help our friends in need.", start: 97400, end: 103400 },
+
+        // Chorus 2
+        { text: "you can count on me like 1, 2, 3.", start: 103900, end: 108400 },
+        { text: "I'll be there.", start: 108900, end: 111900 },
+        { text: "and I know when I need it", start: 112400, end: 114400 },
+        { text: "I can count on you like 4, 3, 2.", start: 114900, end: 119400 },
+        { text: "you'll be there.", start: 119900, end: 121900 },
+        { text: "'cause that's what friends are supposed to do.", start: 122400, end: 126400 },
+        { text: "oh yeah.", start: 126900, end: 133400 },
+
         // Bridge
-        { text: "you'll always have my shoulder when you cry.", start: 134500, end: 139500 },
-        { text: "I'll never let go, never say goodbye.", start: 140000, end: 147500 },
-        
+        { text: "you'll always have my shoulder when you cry.", start: 134400, end: 139400 },
+        { text: "I'll never let go, never say goodbye.", start: 139900, end: 147400 },
+
         // Chorus 3 / Outro
-        { text: "you know you can count on me like 1, 2, 3.", start: 148000, end: 153000 },
-        { text: "I'll be there.", start: 153500, end: 156000 },
-        { text: "and I know when I need it", start: 156500, end: 158500 },
-        { text: "I can count on you like 4, 3, 2.", start: 159000, end: 163500 },
-        { text: "you'll be there.", start: 164000, end: 166000 },
-        { text: "'cause that's what friends are supposed to do.", start: 166500, end: 170500 },
-        { text: "oh yeah.", start: 171500, end: 175500 },
-        { text: "you can count on me 'cause I can count on you.", start: 176500, end: 189500 },
+        { text: "you know you can count on me like 1, 2, 3.", start: 147900, end: 152900 },
+        { text: "I'll be there.", start: 153400, end: 155900 },
+        { text: "and I know when I need it", start: 156400, end: 158400 },
+        { text: "I can count on you like 4, 3, 2.", start: 158900, end: 163400 },
+        { text: "you'll be there.", start: 163900, end: 165900 },
+        { text: "'cause that's what friends are supposed to do.", start: 166400, end: 170400 },
+        { text: "oh yeah.", start: 171400, end: 175400 },
+        { text: "you can count on me 'cause I can count on you.", start: 176400, end: 189400 },
     ];
 
-    // 1. Initialize API Script Globally Once
+    // 1. Load YouTube IFrame API once globally
     useEffect(() => {
-        if (!window.SpotifyIFrameAPIReadyGlobally) {
-            window.onSpotifyIframeApiReady = (IFrameAPI) => {
-                window.SpotifyIFrameAPI = IFrameAPI;
-                window.SpotifyIFrameAPIReadyGlobally = true;
-            };
-
-            const scriptExists = document.getElementById('spotify-iframe-api');
-            if (!scriptExists) {
-                const script = document.createElement('script');
-                script.id = 'spotify-iframe-api';
-                script.src = "https://open.spotify.com/embed/iframe-api/v1";
-                script.async = true;
-                document.body.appendChild(script);
-            }
+        if (!window.YTAPILoaded) {
+            window.YTAPILoaded = true;
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            document.head.appendChild(tag);
         }
     }, []);
 
-    // 2. Poll for the container and API to be ready after player is shown
+    // 2. When player is shown, create the YT player and start the lyric poller
     useEffect(() => {
-        if (!showPlayer) return;
-
-        const interval = setInterval(() => {
-            const embedTarget = document.getElementById('spotify-embed-target');
-            if (window.SpotifyIFrameAPI && embedTarget && !embedController) {
-                clearInterval(interval);
-                
-                const options = {
-                    width: '300',
-                    height: '80',
-                    uri: 'spotify:track:7l1qvxWjxcKpB9PCtBuTbU',
-                    theme: '0'
-                };
-                
-                window.SpotifyIFrameAPI.createController(embedTarget, options, (controller) => {
-                    setEmbedController(controller);
-                    controller.addListener('playback_update', e => {
-                        const pos = e.data.position;
-                        const paused = e.data.isPaused;
-                        setIsPlaying(!paused);
-                        
-                        const current = LYRICS.find(l => pos >= l.start && pos <= l.end);
-                        setActiveLyric(current ? current.text : null);
-                    });
-                });
+        if (!showPlayer) {
+            // Clean up on hide
+            if (lyricIntervalRef.current) clearInterval(lyricIntervalRef.current);
+            if (ytPlayerRef.current) {
+                try { ytPlayerRef.current.destroy(); } catch (_) {}
+                ytPlayerRef.current = null;
             }
-        }, 300);
+            setIsPlaying(false);
+            setActiveLyric(null);
+            return;
+        }
 
-        return () => clearInterval(interval);
-    }, [showPlayer, embedController]);
+        const initPlayer = () => {
+            if (ytPlayerRef.current) return; // already created
+            ytPlayerRef.current = new window.YT.Player('yt-player-target', {
+                height: '0',
+                width: '0',
+                videoId: YT_VIDEO_ID,
+                playerVars: { autoplay: 1, controls: 0, rel: 0, modestbranding: 1 },
+                events: {
+                    onReady: (e) => {
+                        setDuration(e.target.getDuration());
+                    },
+                    onStateChange: (e) => {
+                        const playing = e.data === window.YT.PlayerState.PLAYING;
+                        setIsPlaying(playing);
+                        if (playing) {
+                            // Start lyric + progress polling at 250ms
+                            lyricIntervalRef.current = setInterval(() => {
+                                if (!ytPlayerRef.current) return;
+                                const posMs = ytPlayerRef.current.getCurrentTime() * 1000;
+                                const dur = ytPlayerRef.current.getDuration();
+                                setProgress(dur > 0 ? (posMs / 1000) / dur : 0);
+                                const match = LYRICS.find(l => posMs >= l.start && posMs <= l.end);
+                                setActiveLyric(match ? match.text : null);
+                            }, 250);
+                        } else {
+                            if (lyricIntervalRef.current) clearInterval(lyricIntervalRef.current);
+                        }
+                    },
+                },
+            });
+        };
+
+        // YT API may already be ready or not yet. Poll until ready.
+        const waitForYT = setInterval(() => {
+            if (window.YT && window.YT.Player) {
+                clearInterval(waitForYT);
+                initPlayer();
+            }
+        }, 100);
+
+        return () => {
+            clearInterval(waitForYT);
+            if (lyricIntervalRef.current) clearInterval(lyricIntervalRef.current);
+        };
+    }, [showPlayer]);
 
     const handleClick = () => {
         // Spawn floating notes
@@ -137,19 +161,22 @@ function CassetteTape() {
             setNotes(prev => prev.filter(n => !newNotes.find(nn => nn.id === n.id)));
         }, 1200);
 
-        if (showPlayer) {
-            // Unmount and reset everything cleanly
-            setShowPlayer(false);
-            setIsPlaying(false);
-            setActiveLyric(null);
-            if (embedController) {
-                embedController.destroy();
-                setEmbedController(null);
-            }
+        if (showPlayer && ytPlayerRef.current) {
+            // Toggle play/pause on subsequent taps of the cassette
+            try {
+                const state = ytPlayerRef.current.getPlayerState();
+                if (state === window.YT.PlayerState.PLAYING) {
+                    ytPlayerRef.current.pauseVideo();
+                } else {
+                    ytPlayerRef.current.playVideo();
+                }
+            } catch (_) {}
         } else {
             setShowPlayer(true);
         }
     };
+
+
 
     return (
         <div style={{
@@ -279,14 +306,8 @@ function CassetteTape() {
                 {isPlaying ? 'now playing ✦' : 'something to listen to ✦'}
             </p>
 
-            {/* Embedded Spotify Player + Spinning Record */}
-            <AnimatePresence onExitComplete={() => {
-                // Ensure the controller is destroyed if React unmounts it ungraciously
-                if (embedController) {
-                    embedController.destroy();
-                    setEmbedController(null);
-                }
-            }}>
+            {/* Custom Mini Player + Spinning Record */}
+            <AnimatePresence>
                 {showPlayer && (
                     <motion.div
                         initial={{ opacity: 0, y: 12, scale: 0.96 }}
@@ -295,78 +316,184 @@ function CassetteTape() {
                         transition={{ duration: 0.5, ease: 'easeOut' }}
                         style={{
                             marginTop: 16,
-                            position: 'relative',
-                            width: 320,
-                            height: 80,
                             display: 'flex',
-                            justifyContent: 'center'
+                            alignItems: 'center',
+                            gap: 0,
                         }}
                     >
-                        {/* Spinning Record (slides out from behind the player) */}
+                        {/* Hidden YouTube API target */}
+                        <div id="yt-player-target" style={{ width: 0, height: 0, overflow: 'hidden', position: 'absolute', pointerEvents: 'none' }} />
+
+                        {/* Custom Player Card */}
+                        <div style={{
+                            width: 300,
+                            background: '#1a1625',
+                            borderRadius: 16,
+                            padding: '12px 14px',
+                            boxShadow: '0 8px 32px rgba(62,53,82,0.35)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 10,
+                            zIndex: 2,
+                            flexShrink: 0,
+                        }}>
+                            {/* Top Row: Thumbnail + Info + Play button */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                {/* Album art thumbnail */}
+                                <img
+                                    src={`https://i.ytimg.com/vi/${YT_VIDEO_ID}/default.jpg`}
+                                    alt="Count On Me"
+                                    style={{
+                                        width: 44, height: 44,
+                                        borderRadius: 8,
+                                        objectFit: 'cover',
+                                        flexShrink: 0,
+                                    }}
+                                />
+                                {/* Song info */}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontSize: '0.82rem',
+                                        fontWeight: 600,
+                                        color: '#f5f2fb',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                    }}>Count On Me</div>
+                                    <div style={{
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontSize: '0.72rem',
+                                        color: 'rgba(245,242,251,0.5)',
+                                        marginTop: 2,
+                                    }}>Bruno Mars</div>
+                                </div>
+                                {/* Play / Pause button */}
+                                <button
+                                    onClick={() => {
+                                        if (!ytPlayerRef.current) return;
+                                        try {
+                                            const state = ytPlayerRef.current.getPlayerState();
+                                            if (state === window.YT.PlayerState.PLAYING) {
+                                                ytPlayerRef.current.pauseVideo();
+                                            } else {
+                                                ytPlayerRef.current.playVideo();
+                                            }
+                                        } catch (_) {}
+                                    }}
+                                    style={{
+                                        width: 36, height: 36,
+                                        borderRadius: '50%',
+                                        background: 'linear-gradient(135deg, #c4aded, #9b72cf)',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        flexShrink: 0,
+                                        boxShadow: '0 2px 8px rgba(155,114,207,0.4)',
+                                        transition: 'transform 0.15s',
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                >
+                                    {isPlaying ? (
+                                        // Pause icon
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="white">
+                                            <rect x="2" y="1" width="4" height="12" rx="1.5"/>
+                                            <rect x="8" y="1" width="4" height="12" rx="1.5"/>
+                                        </svg>
+                                    ) : (
+                                        // Play icon
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="white">
+                                            <path d="M3 1.5 L12 7 L3 12.5 Z"/>
+                                        </svg>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Progress bar */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        height: 4,
+                                        background: 'rgba(255,255,255,0.1)',
+                                        borderRadius: 99,
+                                        cursor: 'pointer',
+                                        position: 'relative',
+                                    }}
+                                    onClick={(e) => {
+                                        if (!ytPlayerRef.current || !duration) return;
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        const pct = (e.clientX - rect.left) / rect.width;
+                                        ytPlayerRef.current.seekTo(pct * duration, true);
+                                        setProgress(pct);
+                                    }}
+                                >
+                                    {/* Filled portion */}
+                                    <div style={{
+                                        width: `${progress * 100}%`,
+                                        height: '100%',
+                                        background: 'linear-gradient(90deg, #c4aded, #9b72cf)',
+                                        borderRadius: 99,
+                                        transition: 'width 0.25s linear',
+                                        position: 'relative',
+                                    }}>
+                                        {/* Dot handle */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            right: -5,
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            width: 10, height: 10,
+                                            borderRadius: '50%',
+                                            background: '#fff',
+                                            boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                                        }} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Spinning Record - peeks out from right of player */}
                         <motion.div
-                            initial={{ x: 0, rotate: 0 }}
-                            animate={{ 
-                                x: 50, // slide out further to the right
-                                rotate: isPlaying ? 360 : 0 
+                            initial={{ x: -50, rotate: 0 }}
+                            animate={{
+                                x: 0,
+                                rotate: isPlaying ? 360 : 0,
                             }}
-                            transition={{ 
-                                x: { type: "spring", stiffness: 100, damping: 20, delay: 0.2 },
-                                rotate: { duration: 3, repeat: Infinity, ease: "linear" }
+                            transition={{
+                                x: { type: 'spring', stiffness: 100, damping: 20, delay: 0.2 },
+                                rotate: { duration: 3, repeat: Infinity, ease: 'linear' },
                             }}
                             style={{
-                                position: 'absolute',
-                                right: 10,
-                                top: 0,
-                                width: 80,
-                                height: 80,
+                                width: 80, height: 80,
                                 borderRadius: '50%',
                                 background: 'conic-gradient(from 90deg, #111 0deg, #333 45deg, #111 90deg, #333 135deg, #111 180deg, #333 225deg, #111 270deg, #333 315deg, #111 360deg)',
-                                boxShadow: 'inset 0 0 0 2px #000, 0 4px 12px rgba(0,0,0,0.2)',
+                                boxShadow: 'inset 0 0 0 2px #000, 0 4px 16px rgba(0,0,0,0.35)',
                                 border: '1px solid #333',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                overflow: 'hidden',
+                                flexShrink: 0,
+                                marginLeft: -20,
                                 zIndex: 1,
-                                overflow: 'hidden'
                             }}
                         >
-                            {/* Record grooves */}
                             <div style={{ position: 'absolute', inset: 4, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.08)' }} />
                             <div style={{ position: 'absolute', inset: 12, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.06)' }} />
                             <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.05)' }} />
-                            {/* Record label */}
                             <div style={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: '50%',
+                                width: 32, height: 32, borderRadius: '50%',
                                 background: 'linear-gradient(135deg, #c4aded, #9b72cf)',
                                 border: '2px solid #2e263d',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 position: 'relative'
                             }}>
-                                {/* Tiny label detail so rotation is obvious near the center too */}
                                 <div style={{ position: 'absolute', width: '100%', height: 4, background: '#fff', opacity: 0.3, transform: 'rotate(45deg)' }} />
-                                {/* Spindle hole */}
                                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f5f2fb', border: '1px solid #111', zIndex: 2 }} />
                             </div>
                         </motion.div>
-
-                        {/* Player Frame */}
-                        <div style={{
-                            position: 'relative',
-                            zIndex: 2,
-                            borderRadius: 12,
-                            overflow: 'hidden',
-                            boxShadow: '0 4px 20px rgba(62,53,82,0.15)',
-                            background: '#282828', // Spotify dark background
-                            width: 300,
-                            height: 80
-                        }}>
-                            {/* The IFrame API replaces this exact div */}
-                            <div id="spotify-embed-target" style={{ width: 300, height: 80 }}></div>
-                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
