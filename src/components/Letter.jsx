@@ -12,6 +12,118 @@ function CassetteTape() {
     const [isHovered, setIsHovered] = useState(false);
     const [notes, setNotes] = useState([]);
     const noteIdRef = useRef(0);
+    
+    // Player state
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [activeLyric, setActiveLyric] = useState(null);
+    const [showPlayer, setShowPlayer] = useState(false);
+    const [embedController, setEmbedController] = useState(null);
+
+    const LYRICS = [
+        // Verse 1
+        { text: "if you ever find yourself stuck in the middle of the sea", start: 5000, end: 10500 },
+        { text: "I'll sail the world to find you.", start: 11000, end: 16000 },
+        { text: "if you ever find yourself lost in the dark and you can't see", start: 16500, end: 22000 },
+        { text: "I'll be the light to guide you.", start: 22500, end: 27000 },
+        
+        // Pre-Chorus
+        { text: "we find out what we're made of", start: 27500, end: 30500 },
+        { text: "when we are called to help our friends in need.", start: 31000, end: 37000 },
+        
+        // Chorus
+        { text: "you can count on me like 1, 2, 3.", start: 37500, end: 42000 },
+        { text: "I'll be there.", start: 42500, end: 45500 },
+        { text: "and I know when I need it", start: 46000, end: 48000 },
+        { text: "I can count on you like 4, 3, 2.", start: 48500, end: 53000 },
+        { text: "you'll be there.", start: 53500, end: 55000 },
+        { text: "'cause that's what friends are supposed to do.", start: 55500, end: 59500 },
+        { text: "oh yeah.", start: 60500, end: 68500 },
+        
+        // Verse 2
+        { text: "if you're tossin' and you're turnin' and you just can't fall asleep", start: 71000, end: 76000 },
+        { text: "I'll sing a song beside you.", start: 77000, end: 82000 },
+        { text: "and if you ever forget how much you really mean to me", start: 82500, end: 88000 },
+        { text: "every day I will remind you.", start: 88500, end: 93500 },
+        
+        // Pre-Chorus
+        { text: "oh, we find out what we're made of", start: 94000, end: 97000 },
+        { text: "when we are called to help our friends in need.", start: 97500, end: 103500 },
+        
+        // Chorus
+        { text: "you can count on me like 1, 2, 3.", start: 104000, end: 108500 },
+        { text: "I'll be there.", start: 109000, end: 112000 },
+        { text: "and I know when I need it", start: 112500, end: 114500 },
+        { text: "I can count on you like 4, 3, 2.", start: 115000, end: 119500 },
+        { text: "you'll be there.", start: 120000, end: 122000 },
+        { text: "'cause that's what friends are supposed to do.", start: 122500, end: 126500 },
+        { text: "oh yeah.", start: 127000, end: 133500 },
+        
+        // Bridge
+        { text: "you'll always have my shoulder when you cry.", start: 134500, end: 139500 },
+        { text: "I'll never let go, never say goodbye.", start: 140000, end: 147500 },
+        
+        // Chorus 3 / Outro
+        { text: "you know you can count on me like 1, 2, 3.", start: 148000, end: 153000 },
+        { text: "I'll be there.", start: 153500, end: 156000 },
+        { text: "and I know when I need it", start: 156500, end: 158500 },
+        { text: "I can count on you like 4, 3, 2.", start: 159000, end: 163500 },
+        { text: "you'll be there.", start: 164000, end: 166000 },
+        { text: "'cause that's what friends are supposed to do.", start: 166500, end: 170500 },
+        { text: "oh yeah.", start: 171500, end: 175500 },
+        { text: "you can count on me 'cause I can count on you.", start: 176500, end: 189500 },
+    ];
+
+    // 1. Initialize API Script Globally Once
+    useEffect(() => {
+        if (!window.SpotifyIFrameAPIReadyGlobally) {
+            window.onSpotifyIframeApiReady = (IFrameAPI) => {
+                window.SpotifyIFrameAPI = IFrameAPI;
+                window.SpotifyIFrameAPIReadyGlobally = true;
+            };
+
+            const scriptExists = document.getElementById('spotify-iframe-api');
+            if (!scriptExists) {
+                const script = document.createElement('script');
+                script.id = 'spotify-iframe-api';
+                script.src = "https://open.spotify.com/embed/iframe-api/v1";
+                script.async = true;
+                document.body.appendChild(script);
+            }
+        }
+    }, []);
+
+    // 2. Poll for the container and API to be ready after player is shown
+    useEffect(() => {
+        if (!showPlayer) return;
+
+        const interval = setInterval(() => {
+            const embedTarget = document.getElementById('spotify-embed-target');
+            if (window.SpotifyIFrameAPI && embedTarget && !embedController) {
+                clearInterval(interval);
+                
+                const options = {
+                    width: '300',
+                    height: '80',
+                    uri: 'spotify:track:7l1qvxWjxcKpB9PCtBuTbU',
+                    theme: '0'
+                };
+                
+                window.SpotifyIFrameAPI.createController(embedTarget, options, (controller) => {
+                    setEmbedController(controller);
+                    controller.addListener('playback_update', e => {
+                        const pos = e.data.position;
+                        const paused = e.data.isPaused;
+                        setIsPlaying(!paused);
+                        
+                        const current = LYRICS.find(l => pos >= l.start && pos <= l.end);
+                        setActiveLyric(current ? current.text : null);
+                    });
+                });
+            }
+        }, 300);
+
+        return () => clearInterval(interval);
+    }, [showPlayer, embedController]);
 
     const handleClick = () => {
         // Spawn floating notes
@@ -25,8 +137,18 @@ function CassetteTape() {
             setNotes(prev => prev.filter(n => !newNotes.find(nn => nn.id === n.id)));
         }, 1200);
 
-        // Open link
-        window.open('https://open.spotify.com/', '_blank');
+        if (showPlayer) {
+            // Unmount and reset everything cleanly
+            setShowPlayer(false);
+            setIsPlaying(false);
+            setActiveLyric(null);
+            if (embedController) {
+                embedController.destroy();
+                setEmbedController(null);
+            }
+        } else {
+            setShowPlayer(true);
+        }
     };
 
     return (
@@ -111,7 +233,7 @@ function CassetteTape() {
                         fill: '#3e3552',
                     }}
                 >
-                    Rashiii's tape ✦
+                    count on me ✦
                 </text>
 
                 {/* Reels */}
@@ -121,8 +243,8 @@ function CassetteTape() {
                         fill="#dcd2f0"
                         stroke="rgba(184,156,230,0.4)"
                         strokeWidth="0.5"
-                        animate={isHovered ? { rotate: 360 } : {}}
-                        transition={isHovered ? { duration: 1.5, repeat: Infinity, ease: "linear" } : {}}
+                        animate={isHovered || isPlaying ? { rotate: 360 } : {}}
+                        transition={isHovered || isPlaying ? { duration: 1.5, repeat: Infinity, ease: "linear" } : {}}
                         style={{ transformOrigin: '50px 25px' }}
                     />
                     <circle cx="50" cy="25" r="3" fill="#f0ebfa" />
@@ -132,8 +254,8 @@ function CassetteTape() {
                         fill="#dcd2f0"
                         stroke="rgba(184,156,230,0.4)"
                         strokeWidth="0.5"
-                        animate={isHovered ? { rotate: 360 } : {}}
-                        transition={isHovered ? { duration: 1.5, repeat: Infinity, ease: "linear" } : {}}
+                        animate={isHovered || isPlaying ? { rotate: 360 } : {}}
+                        transition={isHovered || isPlaying ? { duration: 1.5, repeat: Infinity, ease: "linear" } : {}}
                         style={{ transformOrigin: '110px 25px' }}
                     />
                     <circle cx="110" cy="25" r="3" fill="#f0ebfa" />
@@ -154,8 +276,183 @@ function CassetteTape() {
                 opacity: 0.45,
                 marginTop: 8,
             }}>
-                something to listen to ✦
+                {isPlaying ? 'now playing ✦' : 'something to listen to ✦'}
             </p>
+
+            {/* Embedded Spotify Player + Spinning Record */}
+            <AnimatePresence onExitComplete={() => {
+                // Ensure the controller is destroyed if React unmounts it ungraciously
+                if (embedController) {
+                    embedController.destroy();
+                    setEmbedController(null);
+                }
+            }}>
+                {showPlayer && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 12, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                        style={{
+                            marginTop: 16,
+                            position: 'relative',
+                            width: 320,
+                            height: 80,
+                            display: 'flex',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        {/* Spinning Record (slides out from behind the player) */}
+                        <motion.div
+                            initial={{ x: 0, rotate: 0 }}
+                            animate={{ 
+                                x: 50, // slide out further to the right
+                                rotate: isPlaying ? 360 : 0 
+                            }}
+                            transition={{ 
+                                x: { type: "spring", stiffness: 100, damping: 20, delay: 0.2 },
+                                rotate: { duration: 3, repeat: Infinity, ease: "linear" }
+                            }}
+                            style={{
+                                position: 'absolute',
+                                right: 10,
+                                top: 0,
+                                width: 80,
+                                height: 80,
+                                borderRadius: '50%',
+                                background: 'conic-gradient(from 90deg, #111 0deg, #333 45deg, #111 90deg, #333 135deg, #111 180deg, #333 225deg, #111 270deg, #333 315deg, #111 360deg)',
+                                boxShadow: 'inset 0 0 0 2px #000, 0 4px 12px rgba(0,0,0,0.2)',
+                                border: '1px solid #333',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                zIndex: 1,
+                                overflow: 'hidden'
+                            }}
+                        >
+                            {/* Record grooves */}
+                            <div style={{ position: 'absolute', inset: 4, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.08)' }} />
+                            <div style={{ position: 'absolute', inset: 12, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.06)' }} />
+                            <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.05)' }} />
+                            {/* Record label */}
+                            <div style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: '50%',
+                                background: 'linear-gradient(135deg, #c4aded, #9b72cf)',
+                                border: '2px solid #2e263d',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                position: 'relative'
+                            }}>
+                                {/* Tiny label detail so rotation is obvious near the center too */}
+                                <div style={{ position: 'absolute', width: '100%', height: 4, background: '#fff', opacity: 0.3, transform: 'rotate(45deg)' }} />
+                                {/* Spindle hole */}
+                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f5f2fb', border: '1px solid #111', zIndex: 2 }} />
+                            </div>
+                        </motion.div>
+
+                        {/* Player Frame */}
+                        <div style={{
+                            position: 'relative',
+                            zIndex: 2,
+                            borderRadius: 12,
+                            overflow: 'hidden',
+                            boxShadow: '0 4px 20px rgba(62,53,82,0.15)',
+                            background: '#282828', // Spotify dark background
+                            width: 300,
+                            height: 80
+                        }}>
+                            {/* The IFrame API replaces this exact div */}
+                            <div id="spotify-embed-target" style={{ width: 300, height: 80 }}></div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Lyric Overlay - using absolute position to pin to Letter section! */}
+            <AnimatePresence>
+                {activeLyric && (
+                    <motion.div
+                        key={activeLyric}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.6, ease: 'easeOut' }}
+                        style={{
+                            position: 'absolute',
+                            top: '100%',
+                            marginTop: '20px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            zIndex: 1000,
+                            textAlign: 'center',
+                            pointerEvents: 'none',
+                            maxWidth: 480,
+                            width: 'max-content',
+                            padding: '0 1rem',
+                        }}
+                    >
+                        {/* Top rule */}
+                        <motion.div
+                            initial={{ scaleX: 0 }}
+                            animate={{ scaleX: 1 }}
+                            exit={{ scaleX: 0 }}
+                            transition={{ duration: 0.4, ease: 'easeOut' }}
+                            style={{
+                                height: 1,
+                                background: 'linear-gradient(90deg, transparent, rgba(184,156,230,0.4), transparent)',
+                                marginBottom: 12,
+                                transformOrigin: 'center',
+                            }}
+                        />
+
+                        <p style={{
+                            fontFamily: "'Playfair Display', Georgia, serif",
+                            fontStyle: 'italic',
+                            fontSize: 'clamp(0.95rem, 2.5vw, 1.15rem)',
+                            color: '#3e3552',
+                            opacity: 0.82,
+                            lineHeight: 1.6,
+                            letterSpacing: '0.01em',
+                            margin: 0,
+                        }}>
+                            {activeLyric}
+                        </p>
+
+                        {/* Bottom rule */}
+                        <motion.div
+                            initial={{ scaleX: 0 }}
+                            animate={{ scaleX: 1 }}
+                            exit={{ scaleX: 0 }}
+                            transition={{ duration: 0.4, delay: 0.15, ease: 'easeOut' }}
+                            style={{
+                                height: 1,
+                                background: 'linear-gradient(90deg, transparent, rgba(184,156,230,0.4), transparent)',
+                                marginTop: 12,
+                                transformOrigin: 'center',
+                            }}
+                        />
+
+                        {/* Small star */}
+                        <motion.span
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 0.4, scale: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3, delay: 0.3 }}
+                            style={{
+                                display: 'block',
+                                marginTop: 8,
+                                fontSize: '8px',
+                                color: '#b89ce6',
+                            }}
+                        >
+                            ✦
+                        </motion.span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
